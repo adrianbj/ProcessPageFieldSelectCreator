@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => 'Page Field Select Creator',
-            'version' => 3,
+            'version' => 4,
             'summary' => 'Automated creation of Page fields, along with the templates and page tree for their source.',
             'singular' => true,
             'autoload' => false,
@@ -121,8 +121,8 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f = $this->modules->get("InputfieldTextarea");
         $f->name = 'selectOptions';
         $f->label = 'Select Options';
-        $f->description = 'These will become the child pages that will populate the page field select options.';
-        $f->notes = "SIMPLE\nEnter one option per line - title field only, eg: \nSingle\nDouble\nSuite\n\nADVANCED\nYou may alternately set up options with multiple fields, eg:\nTitle, Number of Beds, Number of People, Kitchen Facilities\nSingle, 1, 1, Fridge Only\nDouble, 2, 2, Fridge Only\nSuite, 3, 6, Full Kitchen\n\nWhen using the advanced setup, the first line is used for the field names and the first field must be \"Title\"";
+        $f->description = "These will become the child pages that will populate the page field select options.\n\nSIMPLE\nEnter one option per line - title field only, eg: \nSingle\nDouble\nSuite\n\nADVANCED\nYou may alternately set up options with multiple fields, eg:\nTitle, Number of Beds, Number of People, Kitchen Facilities\nSingle, 1, 1, Fridge Only\nDouble, 2, 2, Fridge Only\nSuite, 3, 6, Full Kitchen\n\nWhen using the advanced setup, the first line is used for the field names and the first field must be \"Title\"";
+        $f->notes = "For the advanced option, you can specify titles/names for new fields and they will be created automatically, or you can choose from the following existing text fields.\n\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
         $f->required = true;
         $form->add($f);
 
