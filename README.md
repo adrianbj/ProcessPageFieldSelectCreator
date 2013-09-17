@@ -40,3 +40,22 @@ The templates are configured such that the "room_types_items" child template can
 This module will let you create a full page field setup in literally a few seconds :)
 
 Then all you have to do is add the newly created page field to any template you want and you're ready to go!
+
+
+##How to install
+
+Download and place the module folder named "ProcessPageFieldSelectCreator" in: /site/modules/
+
+In the admin control panel, go to Modules. At the bottom of the screen, click the "Check for New Modules" button.
+
+Now scroll to the ProcessPageFieldSelectCreator module and click "Install".
+
+
+##Usage
+
+Go to the Setup Page > Page Field Select Creator and follow the prompts.
+
+
+##Support
+
+http://processwire.com/talk/topic/4523-page-field-select-creator/
