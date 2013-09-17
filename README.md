@@ -18,7 +18,7 @@ To use, run Page Field Select Creator from the Setup Menu
 
     ADVANCED (multiple fields) - Enter the field names on the first line and the values for each page on the subsequent lines, eg:
 
-    Title, Number of Beds, Number of People, Kitchen Facilities
+    Title, Number of Beds, Number of People, Kitchen Facilities<br />
     Single, 1, 1, Fridge Only<br />
     Double, 2, 2, Fridge Only<br />
     Suite, 3, 6, Full Kitchen
