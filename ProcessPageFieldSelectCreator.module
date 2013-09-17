@@ -98,7 +98,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->label = 'Field Title';
         $f->required = true;
         $f->description = "The title of the page field to be created.";
-        $f->notes = "Use capitals, spaces etc."
+        $f->notes = "Use capitals, spaces etc.";
         $form->add($f);
 
         $f = $this->modules->get("InputfieldPageListSelect");
