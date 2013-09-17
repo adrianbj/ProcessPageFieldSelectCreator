@@ -4,7 +4,7 @@
  * ProcessWire Page Field Select Creator
  * by Adrian Jones
  *
- * Allows automated creation of Page fields for Select drop downs, along with the templates and page tree for their source.
+ * Allows automated creation of Page fields, along with the templates and page tree for their source.
  *
  * ProcessWire 2.x
  * Copyright (C) 2011 by Ryan Cramer
@@ -27,7 +27,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         return array(
             'title' => 'Page Field Select Creator',
             'version' => 1,
-            'summary' => 'Automated creation of Page fields for Select drop downs, along with the templates and page tree for their source.',
+            'summary' => 'Automated creation of Page fields, along with the templates and page tree for their source.',
             'singular' => true,
             'autoload' => false,
             );
@@ -117,14 +117,14 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->addOption('0', 'Multiple pages (PageArray)');
         $f->addOption('1', 'Single page (Page) or boolean false when none selected');
         $f->addOption('2', 'Single page (Page) or empty page (NullPage) when none selected');
-        if($this->session->derefAsPage) $f->attr('value', $this->session->derefAsPage);
+        $this->session->derefAsPage ? $f->attr('value', $this->session->derefAsPage) : $f->attr('value', 0);
         $form->add($f);
 
         $f = $this->modules->get("InputfieldTextarea");
         $f->name = 'selectOptions';
         $f->label = 'Select Options';
-        $f->description = 'These will become the child pages that will populate the page field select dropdown.';
-        $f->notes = "Enter one option per line, eg: \nYes\nNo\nMaybe";
+        $f->description = 'These will become the child pages that will populate the page field select options.';
+        $f->notes = "SIMPLE\nEnter one option per line - title field only, eg: \nSingle\nDouble\nSuite\n\nADVANCED\nYou may alternately set up options with multiple fields, eg:\nTitle, Number of People, Number of Beds, Kitchen Facilities\nSingle, 1, 1, Fridge Only\nDouble, 2, 2, Fridge Only\nSuite, 3, 6, Full Kitchen\n\nIn this case, the first line is used for the field names and the first field must be \"Title\"";
         $f->required = true;
         $form->add($f);
 
@@ -176,7 +176,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
 
 
         //Templates - first iteration to create fieldgroups and templates
-
         //Parent template
         if(!$this->fieldgroups->$fieldName) {
             $fg = new Fieldgroup();
@@ -225,7 +224,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
 
 
         //Templates - second iteration to save settings.
-        //Had to separate because it wasn't possible to populate childTemplates / parentTemplates arrays if the template to be set wasn't created yet
 
         //Parent Template
         $parent_template->noParents = 1;
@@ -256,28 +254,84 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         }
 
         //Child pages - ie select options
+        $i=0;
         foreach(explode("\n",$form->get('selectOptions')->value) as $selectTitle){
-            $child_page = new Page();
-            $child_page->parent = $page;
-            $child_page->template = $child_template;
-            $child_page->name = $this->sanitizer->fieldName(strtolower($selectTitle));
-            $child_page->title = $selectTitle;
-            $child_page->of;
-            $child_page->save();
+
+            if(strpos($selectTitle,',') !== false){ // Creation of child pages using the ADVANCED configuration options - comma should be a good enough indicator to check for
+
+                $x=0;
+                foreach(explode(",",$selectTitle) as $selectFieldTitle){
+
+                    $selectFieldTitle = trim($selectFieldTitle);
+                    $selectFieldName = $this->sanitizer->fieldName(strtolower($selectFieldTitle));
+
+                    if($i==0){ //First loop/line is for field creation. Remaining are for child pages
+
+                        if($selectFieldName != 'title') { //No need to create title field
+
+                            $sub_field[$x] = $selectFieldName; // Store name of fields for later population of values in child page
+
+                            if(!$this->fields->$selectFieldName){
+                                $field = new Field();
+                                $field->type = $this->modules->get('FieldtypeText'); // get a field type
+                                $field->name = $selectFieldName;
+                                $field->label = $selectFieldTitle;
+                                $field->save(); // save the field
+
+                                $child_template->fieldgroup->append($field); // add new field to template
+                            }
+                            else{
+                                $child_template->fieldgroup->append($this->fields->$selectFieldName); // add existing field to template - NB: this does not change any of the attributes of a field if it already exists - this could be problematic
+                            }
+
+                            $child_template->fieldgroup->save();
+                        }
+
+                    }
+                    else{ // All but first loop - for creating child pages from the rest of the lines in the select options textarea
+
+                        if($x==0){ // First value in comma separated row is the title, so create the child page with this
+                            $child_page = new Page();
+                            $child_page->parent = $page;
+                            $child_page->template = $child_template;
+                            $child_page->name = $selectFieldName;
+                            $child_page->title = $selectFieldTitle;
+                            $child_page->of;
+                            $child_page->save();
+                        }
+                        else{ // Add values for the other fields to the child page
+                            $child_page->$sub_field[$x] = $selectFieldTitle;
+                            $child_page->save();
+                        }
+
+                    }
+
+                    $x++;
+                }
+            }
+            else{ // Creation of child pages using the SIMPLE configuration option
+                $child_page = new Page();
+                $child_page->parent = $page;
+                $child_page->template = $child_template;
+                $child_page->name = $this->sanitizer->fieldName(strtolower($selectTitle));
+                $child_page->title = $selectTitle;
+                $child_page->of;
+                $child_page->save();
+            }
+
+            $i++;
         }
 
 
 
         //Page Field
-        if(!$this->fields->{$fieldName}){
+        if(!$this->fields->$fieldName){
             $field = new Field();
             $field->type = $this->modules->get('FieldtypePage'); // get a field type
             $field->name = $fieldName;
             $field->label = $fieldTitle;
             $field->description = 'Page field that selects child pages from the parent entitled ' . $fieldTitle;
             $field->derefAsPage = $form->get('derefAsPage')->value;
-            $field->parent_id = $page->id;
-            $field->template_id = $child_template->id;
             $field->inputfield = $form->get('inputfield')->value;
             $field->labelFieldName = 'title';
             $field->addable = $form->get('addable')->value;
@@ -301,7 +355,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     protected function processFormMarkup($field, $parent_template, $child_template, $page) {
         $out = '';
         $out .= "<h2>Created all required templates and pages for the $field->label field</h2>" .
-            "<p><a href='{$this->config->urls->admin}setup/field/edit?id={$field->id}'>View the created field</a></p>
+            "<p><a href='{$this->config->urls->admin}setup/field/edit?id={$field->id}'>View the created page field</a></p>
             <p><a href='{$this->config->urls->admin}setup/template/edit?id={$parent_template->id}'>View the parent template</a></p>
             <p><a href='{$this->config->urls->admin}setup/template/edit?id={$child_template->id}'>View the child template</a></p>
             <p><a href='{$this->config->urls->admin}page/list/?open={$page->id}'>Open the page tree</a></p>
