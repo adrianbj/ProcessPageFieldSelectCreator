@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => 'Page Field Select Creator',
-            'version' => 2,
+            'version' => 3,
             'summary' => 'Automated creation of Page fields, along with the templates and page tree for their source.',
             'singular' => true,
             'autoload' => false,
@@ -80,13 +80,11 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     protected function buildForm1() {
 
         $defaultInputfieldClasses = array(
-            // default options
             'InputfieldSelect',
             'InputfieldSelectMultiple*',
             'InputfieldCheckboxes*',
             'InputfieldRadios',
-            'InputfieldAsmSelect*',
-            'InputfieldPageListSelect',
+            'InputfieldAsmSelect*'
         );
 
         $form = $this->modules->get("InputfieldForm");
@@ -124,7 +122,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->name = 'selectOptions';
         $f->label = 'Select Options';
         $f->description = 'These will become the child pages that will populate the page field select options.';
-        $f->notes = "SIMPLE\nEnter one option per line - title field only, eg: \nSingle\nDouble\nSuite\n\nADVANCED\nYou may alternately set up options with multiple fields, eg:\nTitle, Number of People, Number of Beds, Kitchen Facilities\nSingle, 1, 1, Fridge Only\nDouble, 2, 2, Fridge Only\nSuite, 3, 6, Full Kitchen\n\nIn this case, the first line is used for the field names and the first field must be \"Title\"";
+        $f->notes = "SIMPLE\nEnter one option per line - title field only, eg: \nSingle\nDouble\nSuite\n\nADVANCED\nYou may alternately set up options with multiple fields, eg:\nTitle, Number of Beds, Number of People, Kitchen Facilities\nSingle, 1, 1, Fridge Only\nDouble, 2, 2, Fridge Only\nSuite, 3, 6, Full Kitchen\n\nWhen using the advanced setup, the first line is used for the field names and the first field must be \"Title\"";
         $f->required = true;
         $form->add($f);
 
@@ -144,7 +142,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->name = 'addable';
         $f->label = 'Allow new pages to be created from field?';
         $f->description = 'If checked, an option to add new page(s) will also be present if the indicated requirements are met.';
-        $f->notes = 'The editing user must have access to create/publish these pages. All other normal requirements for this feature are taken care of.';
+        $f->notes = 'The editing user must have access to create/publish these pages. All other requirements for this feature are taken care of.';
         $f->attr('checked', $this->session->addable == '1' ? 'checked' : '' );
         if($this->session->addable) $f->attr('value', $this->session->addable);
         $form->add($f);
@@ -332,6 +330,8 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             $field->label = $fieldTitle;
             $field->description = 'Page field that selects child pages from the parent entitled ' . $fieldTitle;
             $field->derefAsPage = $form->get('derefAsPage')->value;
+            $field->parent_id = $page->id;
+            $field->template_id = $child_template->id;
             $field->inputfield = $form->get('inputfield')->value;
             $field->labelFieldName = 'title';
             $field->addable = $form->get('addable')->value;
