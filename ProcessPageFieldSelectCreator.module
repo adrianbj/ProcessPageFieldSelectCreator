@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => 'Page Field Select Creator',
-            'version' => 4,
+            'version' => 5,
             'summary' => 'Automated creation of Page fields, along with the templates and page tree for their source.',
             'singular' => true,
             'autoload' => false,
@@ -96,7 +96,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->label = 'Field Title';
         $f->required = true;
         $f->description = "The title of the page field to be created.";
-        $f->notes = "Use capitals, spaces etc.";
+        $f->notes = "Use capitals, spaces etc as this also be used for the parent page name and various labels.";
         $form->add($f);
 
         $f = $this->modules->get("InputfieldPageListSelect");
@@ -109,8 +109,8 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
 
         $f = $this->modules->get("InputfieldRadios");
         $f->name = 'derefAsPage';
-        $f->label = 'Deference in API as';
-        $f->description = 'If your field will contain multiple pages, then you should select the first option (PageArray). If your field only needs to contain a single page, then select one of the single Page options (if you are not sure which, select the last option).';
+        $f->label = 'Dereference in API as';
+        $f->description = 'If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support a single item (page), then select one of the single Page options (if you are not sure which, select the last option).';
         $f->required = true;
         $f->addOption('0', 'Multiple pages (PageArray)');
         $f->addOption('1', 'Single page (Page) or boolean false when none selected');
@@ -122,14 +122,14 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->name = 'selectOptions';
         $f->label = 'Select Options';
         $f->description = "These will become the child pages that will populate the page field select options.\n\nSIMPLE\nEnter one option per line - title field only, eg: \nSingle\nDouble\nSuite\n\nADVANCED\nYou may alternately set up options with multiple fields, eg:\nTitle, Number of Beds, Number of People, Kitchen Facilities\nSingle, 1, 1, Fridge Only\nDouble, 2, 2, Fridge Only\nSuite, 3, 6, Full Kitchen\n\nWhen using the advanced setup, the first line is used for the field names and the first field must be \"Title\"";
-        $f->notes = "For the advanced option, you can specify titles/names for new fields and they will be created automatically, or you can choose from the following existing text fields.\n\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
+        $f->notes = "For the advanced option, you can specify titles for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.\n\nOr you can choose from the following existing text fields:\n\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
         $f->required = true;
         $form->add($f);
 
         $f = $this->modules->get("InputfieldSelect");
         $f->name = 'inputfield';
         $f->label = 'Input field type';
-        $f->description = 'The type of field that will be used to select a page. Select one that is consistent with the single page vs. multi-page needs you chose in the "details" tab of this field.';
+        $f->description = 'The type of field that will be used to select a page. Select one that is consistent with the single page vs. multi-page you chose in the "Dereference in API as" field.';
         $f->notes = '* Types indicated with an asterisk are for multiple page selection.';
         $f->required = true;
         foreach($defaultInputfieldClasses as $option){
@@ -141,8 +141,8 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f = $this->modules->get("InputfieldCheckbox");
         $f->name = 'addable';
         $f->label = 'Allow new pages to be created from field?';
-        $f->description = 'If checked, an option to add new page(s) will also be present if the indicated requirements are met.';
-        $f->notes = 'The editing user must have access to create/publish these pages. All other requirements for this feature are taken care of.';
+        $f->description = 'If checked, an option to add new page(s) will also be present if the editing user has access to create/publish these pages.';
+        $f->notes = 'All other requirements (parent & template selected and label-field set to title) for this feature to work are set automatically.';
         $f->attr('checked', $this->session->addable == '1' ? 'checked' : '' );
         if($this->session->addable) $f->attr('value', $this->session->addable);
         $form->add($f);
