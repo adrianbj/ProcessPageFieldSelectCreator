@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => 'Page Field Select Creator',
-            'version' => 5,
+            'version' => 6,
             'summary' => 'Automated creation of Page fields, along with the templates and page tree for their source.',
             'singular' => true,
             'autoload' => false,
@@ -95,27 +95,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->name = 'fieldTitle';
         $f->label = 'Field Title';
         $f->required = true;
-        $f->description = "The title of the page field to be created.";
+        $f->description = "The title of the page field to be created. eg. Room Types";
         $f->notes = "Use capitals, spaces etc as this also be used for the parent page name and various labels.";
-        $form->add($f);
-
-        $f = $this->modules->get("InputfieldPageListSelect");
-        $f->name = 'treeParent';
-        $f->label = 'Parent Page';
-        $f->required = true;
-        $f->description = 'The parent where you want the parent of the selectable pages created. For example you may want to choose a hidden "Categories" parent page.';
-        if($this->session->treeParent) $f->attr('value', $this->session->treeParent);
-        $form->add($f);
-
-        $f = $this->modules->get("InputfieldRadios");
-        $f->name = 'derefAsPage';
-        $f->label = 'Dereference in API as';
-        $f->description = 'If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support a single item (page), then select one of the single Page options (if you are not sure which, select the last option).';
-        $f->required = true;
-        $f->addOption('0', 'Multiple pages (PageArray)');
-        $f->addOption('1', 'Single page (Page) or boolean false when none selected');
-        $f->addOption('2', 'Single page (Page) or empty page (NullPage) when none selected');
-        $this->session->derefAsPage ? $f->attr('value', $this->session->derefAsPage) : $f->attr('value', 0);
+        if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
         $form->add($f);
 
         $f = $this->modules->get("InputfieldTextarea");
@@ -124,6 +106,26 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->description = "These will become the child pages that will populate the page field select options.\n\nSIMPLE\nEnter one option per line - title field only, eg: \nSingle\nDouble\nSuite\n\nADVANCED\nYou may alternately set up options with multiple fields, eg:\nTitle, Number of Beds, Number of People, Kitchen Facilities\nSingle, 1, 1, Fridge Only\nDouble, 2, 2, Fridge Only\nSuite, 3, 6, Full Kitchen\n\nWhen using the advanced setup, the first line is used for the field names and the first field must be \"Title\"";
         $f->notes = "For the advanced option, you can specify titles for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.\n\nOr you can choose from the following existing text fields:\n\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
         $f->required = true;
+        if($this->session->selectOptions) $f->attr('value', $this->session->selectOptions);
+        $form->add($f);
+
+        $f = $this->modules->get("InputfieldPageListSelect");
+        $f->name = 'treeParent';
+        $f->label = 'Parent Page';
+        $f->required = true;
+        $f->description = 'The parent where you want the parent of the selectable pages created. For example you may want to choose a hidden "Options" parent page.';
+        if($this->session->treeParent) $f->attr('value', $this->session->treeParent);
+        $form->add($f);
+
+        $f = $this->modules->get("InputfieldRadios");
+        $f->name = 'derefAsPage';
+        $f->label = 'Dereference in API as';
+        $f->description = 'If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support selection of a single item (page), then select one of the single Page options (if you are not sure which, select the last option).';
+        $f->required = true;
+        $f->addOption('0', 'Multiple pages (PageArray)');
+        $f->addOption('1', 'Single page (Page) or boolean false when none selected');
+        $f->addOption('2', 'Single page (Page) or empty page (NullPage) when none selected');
+        $this->session->derefAsPage ? $f->attr('value', $this->session->derefAsPage) : $f->attr('value', 0);
         $form->add($f);
 
         $f = $this->modules->get("InputfieldSelect");
@@ -161,16 +163,20 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     protected function processForm1(InputfieldForm $form) {
 
         $form->processInput($this->input->post);
-        if(count($form->getErrors())) return false;
 
+        $fieldTitle = $form->get('fieldTitle')->value;
+        $fieldName = $this->sanitizer->fieldName(strtolower($fieldTitle));
+
+        $this->session->fieldTitle = $this->sanitizer->textarea($this->input->fieldTitle);
+        $this->session->selectOptions = $this->sanitizer->textarea($this->input->selectOptions);
         $this->session->treeParent = (int) $this->input->treeParent;
         $this->session->derefAsPage = (int) $this->input->derefAsPage;
         $this->session->inputfield = $this->input->inputfield;
         $this->session->addable = (int) $this->input->addable;
 
+        if(count($form->getErrors())) $this->session->redirect('./');
 
-        $fieldTitle = $form->get('fieldTitle')->value;
-        $fieldName = $this->sanitizer->fieldName(strtolower($fieldTitle));
+        if($this->fields->$fieldName) return '<h2>Field already exists</h2><p>The page field you are trying to create already exists.</p><p>You can either <a href="./"">try again</a> with a different Field Title, or <a href="'.$this->config->urls->admin.'setup/field/edit?id='.$this->fields->$fieldName->id.'">edit/delete the existing field</a>.</p>';
 
 
         //Templates - first iteration to create fieldgroups and templates
@@ -338,13 +344,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             $field->save(); // save the field
         }
 
-
-
         return $this->processFormMarkup($field, $parent_template, $child_template, $page);
 
-
     }
-
 
 
 
