@@ -51,6 +51,8 @@ In the admin control panel, go to Modules. At the bottom of the screen, click th
 
 Now scroll to the ProcessPageFieldSelectCreator module and click "Install".
 
+Optional configuration option to set the suffix that you want to add to the end of the template name for the child pages. The default 'Items' will be converted to '_items' for the name.
+
 
 ##Usage
 

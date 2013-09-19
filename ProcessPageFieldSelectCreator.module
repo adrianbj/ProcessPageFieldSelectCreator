@@ -15,7 +15,7 @@
  *
  */
 
-class ProcessPageFieldSelectCreator extends Process implements Module {
+class ProcessPageFieldSelectCreator extends Process implements Module, ConfigurableModule {
 
     /**
      * getModuleInfo is a module required by all modules to tell ProcessWire about them
@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 9,
+            'version' => 10,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -46,6 +46,18 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
      */
     protected $parent = null;
 
+
+    protected static $configDefaults = array(
+        // global
+        "childSuffix" => "Items"
+    );
+
+
+    /**
+     * Data as used by the get/set functions
+     *
+     */
+    protected $data = array();
 
 
     /**
@@ -220,27 +232,30 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
 
 
         //Child template
-        $childSuffix = __("_items");
+        $childSuffix = $this->data["childSuffix"];
 
-        if(!$this->fieldgroups->{$fieldName.$childSuffix}) {
+        $childSuffixTitle = " " . trim($childSuffix);
+        $childSuffixName = strtolower(str_replace(' ', '_', $childSuffixTitle));
+
+        if(!$this->fieldgroups->{$fieldName.$childSuffixName}) {
             $fg = new Fieldgroup();
-            $fg->name = $fieldName.$childSuffix;
+            $fg->name = $fieldName.$childSuffixName;
             $fg->add("title");
             $fg->save();
         }
         else{
-            $fg = $this->fieldgroups->$fieldName.$childSuffix;
+            $fg = $this->fieldgroups->$fieldName.$childSuffixName;
         }
 
-        if(!$this->templates->{$fieldName.$childSuffix}) {
+        if(!$this->templates->{$fieldName.$childSuffixName}) {
             $child_template = new Template();
-            $child_template->name = $fieldName.$childSuffix;
-            $child_template->label = $fieldTitle.$childSuffix;
+            $child_template->name = $fieldName.$childSuffixName;
+            $child_template->label = $fieldTitle.$childSuffixTitle;
             $child_template->fieldgroup = $fg;
             $child_template->save();
         }
         else{
-            $child_template = $this->templates->$fieldName.$childSuffix;
+            $child_template = $this->templates->$fieldName.$childSuffixName;
         }
 
 
@@ -399,6 +414,41 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->value = $value;
         $form->add($f);
     }
+
+
+
+    /**
+     * Get any inputfields used for configuration of this Fieldtype.
+     *
+     * This is in addition to any configuration fields supplied by the parent Inputfield.
+     *
+     * @param Field $field
+     * @return InputfieldWrapper
+     *
+     */
+    public static function getModuleConfigInputfields(array $data) {
+
+        $modules = wire('modules');
+        $config = wire('config');
+
+        foreach(self::$configDefaults as $key => $value) {
+            if(!isset($data[$key]) || $data[$key]=='') $data[$key] = $value;
+        }
+
+        $inputfields = new InputfieldWrapper();
+
+        $f = $modules->get("InputfieldText");
+        $f->attr('name', 'childSuffix');
+        $f->attr('value', $data["childSuffix"]);
+        $f->attr('size', 20);
+        $f->label = __('Child Template Suffix');
+        $f->description = __('The suffix that you want to add to the end of the template name for the child pages.');
+        $f->notes = __("Use capitals, spaces etc as this also be used for the template label.\nThe default 'Items' will be converted to '_items' for the name.");
+        $inputfields->add($f);
+
+        return $inputfields;
+    }
+
 
 
 
