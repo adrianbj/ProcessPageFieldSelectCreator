@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 7,
+            'version' => 8,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -103,19 +103,16 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f = $this->modules->get("InputfieldTextarea");
         $f->name = "selectOptions";
         $f->label = __("Select Options");
-        $f->description = __("These will become the child pages that will populate the page field select options.") . "\n\n" .
-            __("SIMPLE") . "\n" .
-            __("Enter one option per line - title field only, eg:") . "\n" .
+        $f->description = __("These will become the child pages that will populate the page field select options. There are two different options.") . "\n\n" .
+            __("Option 1. TITLE FIELD ONLY - enter one option per line, eg:") . "\n\n" .
             __("Single") . "\n" .
             __("Double") . "\n" .
-            __("Suite") . "\n\n" .
-            __("ADVANCED") . "\n" .
-            __("You may alternately set up options with multiple fields, eg:") . "\n" .
+            __("Suite") . "\n\n\n" .
+            __("Option 2. MULTIPLE FIELDS - the first line is used for the field names and the first field must be 'Title'. Subsequent lines are the values for the fields, eg:") . "\n\n" .
             __("Title, Number of Beds, Number of People, Kitchen Facilities") . "\n" .
             __("Single, 1, 1, Fridge Only") . "\n" .
             __("Double, 2, 2, Fridge Only") . "\n" .
-            __("Suite, 3, 6, Full Kitchen") . "\n\n" .
-            __("When using the advanced setup, the first line is used for the field names and the first field must be 'Title'");
+            __("Suite, 3, 6, Full Kitchen");
         $f->notes = __("For the advanced option, you can specify titles for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.") . "\n\n" .
             __("Or you can choose from the following existing text fields:") . "\n\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
         $f->required = true;
