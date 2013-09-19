@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 10,
+            'version' => 11,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -108,7 +108,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->label = __("Field Title");
         $f->required = true;
         $f->description = __("The title of the page field to be created. eg. Room Types");
-        $f->notes = __("Use capitals, spaces etc as this also be used for the parent page name and various labels.");
+        $f->notes = __("Use capitals, spaces etc as this is also used for the parent page name and various labels.");
         if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
         $form->add($f);
 
@@ -442,7 +442,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->attr('value', $data["childSuffix"]);
         $f->attr('size', 20);
         $f->label = __('Child Template Suffix');
-        $f->description = __('The suffix that you want to add to the end of the template name for the child pages.');
+        $f->description = __('The suffix to append to the template name for the child pages.');
         $f->notes = __("Use capitals, spaces etc as this also be used for the template label.\nThe default 'Items' will be converted to '_items' for the name.");
         $inputfields->add($f);
 
