@@ -6,9 +6,7 @@ This module provides a way to rapidly generate Page fields and the required temp
 To use, run Page Field Select Creator from the Setup Menu
 
 1. Enter a Field Title, eg: Room Types
-2. Choose the parent where the page tree of options will be created, eg a hidden "Categories" parent page
-3. Select a "Deference in API as" option depending on your needs
-4. Select Options - These will become the child pages that will populate the page field select options. There are two different options.
+2. Select Options - These will become the child pages that will populate the page field select options. There are two different options.
 
     Option 1. TITLE FIELD ONLY - enter one option per line, eg:
 
@@ -24,6 +22,8 @@ To use, run Page Field Select Creator from the Setup Menu
     Double, 2, 2, Fridge Only<br />
     Suite, 3, 6, Full Kitchen
 
+3. Choose the parent where the page tree of options will be created, eg a hidden "Options" parent page
+4. Select a "Deference in API as" option depending on your needs
 5. Choose the input field type
 6. Check whether "Allow new pages to be created from field?" should be enabled.
 
