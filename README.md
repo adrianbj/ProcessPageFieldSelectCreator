@@ -8,15 +8,16 @@ To use, run Page Field Select Creator from the Setup Menu
 1. Enter a Field Title, eg: Room Types
 2. Choose the parent where the page tree of options will be created, eg a hidden "Categories" parent page
 3. Select a "Deference in API as" option depending on your needs
-4. Select Options
+4. Select Options - These will become the child pages that will populate the page field select options. There are two different options.
 
-    SIMPLE (title field only) - Enter required options for the select, one per line, eg:
+    Option 1. TITLE FIELD ONLY - enter one option per line, eg:
 
     Single<br />
     Double<br />
     Suite
 
-    ADVANCED (multiple fields) - Enter the field names on the first line and the values for each page on the subsequent lines, eg:
+
+    Option 2. MULTIPLE FIELDS - the first line is used for the field names and the first field must be 'Title'. Subsequent lines are the values for the fields, eg:
 
     Title, Number of Beds, Number of People, Kitchen Facilities<br />
     Single, 1, 1, Fridge Only<br />
