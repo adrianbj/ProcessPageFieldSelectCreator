@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 8,
+            'version' => 9,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -113,7 +113,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             __("Single, 1, 1, Fridge Only") . "\n" .
             __("Double, 2, 2, Fridge Only") . "\n" .
             __("Suite, 3, 6, Full Kitchen");
-        $f->notes = __("For the advanced option, you can specify titles for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.") . "\n\n" .
+        $f->notes = __("For the multiple fields option, you can specify titles for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.") . "\n\n" .
             __("Or you can choose from the following existing text fields:") . "\n\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
         $f->required = true;
         if($this->session->selectOptions) $f->attr('value', $this->session->selectOptions);

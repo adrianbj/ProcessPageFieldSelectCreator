@@ -30,7 +30,7 @@ To use, run Page Field Select Creator from the Setup Menu
 As an example, if you entered "Room Types" as the field title, you would end up with:
 
 * a fully configured page field called: room_types
-* ADVANCED OPTION - 3 additional fields - number_of_beds, number_of_people, kitchen
+* MULTIPLE FIELDS OPTION - 3 additional fields - number_of_beds, number_of_people, kitchen_facilities
 * a parent template called: room_types
 * a child template called: room_types_items (with either just a title field, or with the 3 additional fields as well)
 * a parent page called: Room Types
