@@ -27,7 +27,7 @@ To use, run Page Field Select Creator from the Setup Menu
 5. Choose the input field type
 6. Check whether "Allow new pages to be created from field?" should be enabled.
 
-As an example, if you entered "Room Types" as the field title, you would end up with:
+As an example, if you entered "Room Types" as the field title, you would end up with all of the following automatically created:
 
 * a fully configured page field called: room_types
 * MULTIPLE FIELDS OPTION - 3 additional fields - number_of_beds, number_of_people, kitchen_facilities
