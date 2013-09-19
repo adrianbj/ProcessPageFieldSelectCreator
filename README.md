@@ -3,6 +3,8 @@ ProcessPageFieldSelectCreator
 
 This module provides a way to rapidly generate Page fields and the required templates and pages for use as a drop down select (or any other Page field type).
 
+This module will let you create a full page field setup in literally a few seconds :)
+
 To use, run Page Field Select Creator from the Setup Menu
 
 1. Enter a Field Title, eg: Room Types
@@ -37,8 +39,6 @@ As an example, if you entered "Room Types" as the field title, you would end up 
 * a series of child pages named and titled based on the per line entries in the Select Options textarea
 
 The templates are configured such that the "room_types_items" child template can only have the main "room_types" template as a parent, and vice versa.
-
-This module will let you create a full page field setup in literally a few seconds :)
 
 Then all you have to do is add the newly created page field to any template you want and you're ready to go!
 
