@@ -301,9 +301,10 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                 foreach(explode(",",$selectTitle) as $selectFieldTitle){
 
                     //Remove any double quote from entries - this is in case people are pasting in default CSV export from PHPMyAdmin etc.
-                    //Might actually be better to go with a proper CSV parser so we could handle commas with items, like:
+                    //Might actually be better to go with a proper CSV parser so we could handle commas within items, like:
                     //"Bolivia, Plurinational State of",BO,"BOLIVIA, PLURINATIONAL STATE OF",BOL,68
                     $selectFieldTitle = trim(str_replace('"', '', $selectFieldTitle));
+
                     $selectFieldName = $this->sanitizer->fieldName(strtolower($selectFieldTitle));
 
                     if($i==0){ //First loop/line is for field creation. Remaining are for child pages
