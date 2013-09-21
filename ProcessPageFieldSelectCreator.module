@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 11,
+            'version' => 12,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -255,7 +255,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             $child_template->save();
         }
         else{
-            $child_template = $this->templates->$fieldName.$childSuffixName;
+            $child_template = $this->templates->{$fieldName.$childSuffixName};
         }
 
 
@@ -291,14 +291,19 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
         //Child pages - ie select options
         $i=0;
-        foreach(explode("\n",$form->get('selectOptions')->value) as $selectTitle){
+        $selectOptions = trim(preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $form->get('selectOptions')->value),"\n"); // remove any blank lines from the textarea
+
+        foreach(explode("\n",$selectOptions) as $selectTitle){
 
             if(strpos($selectTitle,',') !== false){ // Creation of child pages using the ADVANCED configuration options - comma should be a good enough indicator to check for
 
                 $x=0;
                 foreach(explode(",",$selectTitle) as $selectFieldTitle){
 
-                    $selectFieldTitle = trim($selectFieldTitle);
+                    //Remove any double quote from entries - this is in case people are pasting in default CSV export from PHPMyAdmin etc.
+                    //Might actually be better to go with a proper CSV parser so we could handle commas with items, like:
+                    //"Bolivia, Plurinational State of",BO,"BOLIVIA, PLURINATIONAL STATE OF",BOL,68
+                    $selectFieldTitle = trim(str_replace('"', '', $selectFieldTitle));
                     $selectFieldName = $this->sanitizer->fieldName(strtolower($selectFieldTitle));
 
                     if($i==0){ //First loop/line is for field creation. Remaining are for child pages
@@ -326,7 +331,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                     }
                     else{ // All but first loop - for creating child pages from the rest of the lines in the select options textarea
 
-                        if($x==0){ // First value in comma separated row is the title, so create the child page with this
+                        if($x==0){ // First value in comma separated row should be the title, so create the child page with this
                             $child_page = new Page();
                             $child_page->parent = $page;
                             $child_page->template = $child_template;
