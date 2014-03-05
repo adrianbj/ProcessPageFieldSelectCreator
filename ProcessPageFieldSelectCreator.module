@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 12,
+            'version' => 13,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -47,10 +47,21 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     protected $parent = null;
 
 
-    protected static $configDefaults = array(
-        // global
-        "childSuffix" => "Items"
-    );
+   /**
+     * Default configuration for module
+     *
+     */
+    static public function getDefaultData() {
+        return array(
+            "childSuffix" => "Items"
+        );
+    }
+
+    public function __construct() {
+        foreach(self::getDefaultData() as $key => $value) {
+            $this->$key = $value;
+        }
+    }
 
 
     /**
@@ -434,12 +445,10 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
      */
     public static function getModuleConfigInputfields(array $data) {
 
+        $data = array_merge(self::getDefaultData(), $data);
+
         $modules = wire('modules');
         $config = wire('config');
-
-        foreach(self::$configDefaults as $key => $value) {
-            if(!isset($data[$key]) || $data[$key]=='') $data[$key] = $value;
-        }
 
         $inputfields = new InputfieldWrapper();
 
