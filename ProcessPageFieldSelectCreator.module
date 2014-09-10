@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 15,
+            'version' => 16,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -129,7 +129,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->name = "fieldDescription";
         $f->label = __("Field Description");
         $f->description = __("The description for the page field to be created.");
-        $f->notes = __("If left blank the description will be populated as: Page field that selects child pages from the parent entitled...");
         $f->collapsed = Inputfield::collapsedBlank;
         if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
         $form->add($f);
@@ -435,7 +434,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             $field->type = $this->modules->get('FieldtypePage'); // get a field type
             $field->name = $fieldName;
             $field->label = $fieldTitle;
-            $field->description = $form->get('fieldDescription')->value ? $form->get('fieldDescription')->value : sprintf(__("Page field that selects child pages from the parent entitled %s"), $fieldTitle);
+            $field->description = $form->get('fieldDescription')->value;
             $field->derefAsPage = $form->get('derefAsPage')->value;
             $field->parent_id = $page->id;
             $field->template_id = $child_template->id;
