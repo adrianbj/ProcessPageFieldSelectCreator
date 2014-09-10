@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 14,
+            'version' => 15,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -108,7 +108,8 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             'InputfieldSelectMultiple*',
             'InputfieldCheckboxes*',
             'InputfieldRadios',
-            'InputfieldAsmSelect*'
+            'InputfieldAsmSelect*',
+            'InputfieldPageAutocomplete'
         );
 
         $form = $this->modules->get("InputfieldForm");
@@ -124,6 +125,15 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
         $form->add($f);
 
+        $f = $this->modules->get("InputfieldText");
+        $f->name = "fieldDescription";
+        $f->label = __("Field Description");
+        $f->description = __("The description for the page field to be created.");
+        $f->notes = __("If left blank the description will be populated as: Page field that selects child pages from the parent entitled...");
+        $f->collapsed = Inputfield::collapsedBlank;
+        if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
+        $form->add($f);
+
         $f = $this->modules->get("InputfieldTextarea");
         $f->name = "selectOptions";
         $f->label = __("Select Options");
@@ -131,9 +141,14 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             __("Option 1. TITLE FIELD ONLY - enter one option per line, eg:") . "\n\n" .
             __("Single") . "\n" .
             __("Double") . "\n" .
-            __("Suite") . "\n\n\n" .
-            __("Option 2. MULTIPLE FIELDS - the first line is used for the field names and the first field must be 'Title'. Subsequent lines are the values for the fields, eg:") . "\n\n" .
+            __("Suite") . "\n\n" .
+            __("Option 2a. MULTIPLE FIELDS - the first line is used for the field names and the first field must be 'Title'. Subsequent lines are the values for the fields, eg:") . "\n\n" .
             __("Title, Number of Beds, Number of People, Kitchen Facilities") . "\n" .
+            __("Single, 1, 1, Fridge Only") . "\n" .
+            __("Double, 2, 2, Fridge Only") . "\n" .
+            __("Suite, 3, 6, Full Kitchen") . "\n\n" .
+            __("Option 2b. MULTIPLE FIELDS WITH SPECIFIED FIELD TYPES - same as 2a, except that you can specify the field types (Integer, Text, Textarea, TextLanguage, TextareaLanguage, Datetime, Email, Password), eg:") . "\n\n" .
+            __("Title, Number of Beds>Integer, Number of People>Integer, Kitchen Facilities>Text") . "\n" .
             __("Single, 1, 1, Fridge Only") . "\n" .
             __("Double, 2, 2, Fridge Only") . "\n" .
             __("Suite, 3, 6, Full Kitchen");
@@ -141,6 +156,26 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             __("Or you can choose from the following existing text fields:") . "\n\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
         $f->required = true;
         if($this->session->selectOptions) $f->attr('value', $this->session->selectOptions);
+        $form->add($f);
+
+        $f = $this->modules->get("InputfieldText");
+        $f->name = "parentTemplateOverride";
+        $f->label = __("Parent Template Name Overrride");
+        $f->description = __("The name of the parent template to be created (or use existing)");
+        $f->notes = __("Only use this if you want to override the automatically generated template name which is based on the field title. Use capitals, spaces etc as this will be used for the template label as well.") . "\n\n" .
+            __("You can choose from the following existing templates:") . "\n\n" . implode(", ", $this->templates->find("flags=0")->getArray());
+        $f->collapsed = Inputfield::collapsedBlank;
+        if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
+        $form->add($f);
+
+        $f = $this->modules->get("InputfieldText");
+        $f->name = "childTemplateOverride";
+        $f->label = __("Child Template Name Override");
+        $f->description = __("The name of the child template to be created (or use existing)");
+        $f->notes = __("Only use this if you want to override the automatically generated template name which is based on the field title plus the child template suffix in the module config settings. Use capitals, spaces etc as this will be used for the template label as well.") . "\n\n" .
+            __("You can choose from the following existing templates:") . "\n\n" . implode(", ", $this->templates->find("flags=0")->getArray());
+        $f->collapsed = Inputfield::collapsedBlank;
+        if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
         $form->add($f);
 
         $f = $this->modules->get("InputfieldPageListSelect");
@@ -201,6 +236,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $fieldTitle = $form->get('fieldTitle')->value;
         $fieldName = $this->sanitizer->fieldName(strtolower($fieldTitle));
 
+        $parentTemplateLabel = $form->get('parentTemplateOverride')->value ? $form->get('parentTemplateOverride')->value : $fieldTitle;
+        $parentTemplateName = $this->sanitizer->fieldName(strtolower($parentTemplateLabel));
+
         $this->session->fieldTitle = $this->sanitizer->textarea($this->input->fieldTitle);
         $this->session->selectOptions = $this->sanitizer->textarea($this->input->selectOptions);
         $this->session->treeParent = (int) $this->input->treeParent;
@@ -220,26 +258,26 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
         //Templates - first iteration to create fieldgroups and templates
         //Parent template
-        if(!$this->fieldgroups->$fieldName) {
+        if(!$this->fieldgroups->$parentTemplateName) {
             $fg = new Fieldgroup();
-            $fg->name = $fieldName;
+            $fg->name = $parentTemplateName;
             $fg->add("title");
             $fg->save();
         }
         else{
-            $fg = $this->fieldgroups->$fieldName;
+            $fg = $this->fieldgroups->$parentTemplateName;
         }
 
 
-        if(!$this->templates->$fieldName) {
+        if(!$this->templates->$parentTemplateName) {
             $parent_template = new Template();
-            $parent_template->name = $fieldName;
-            $parent_template->label = $fieldTitle;
+            $parent_template->name = $parentTemplateName;
+            $parent_template->label = $parentTemplateLabel;
             $parent_template->fieldgroup = $fg;
             $parent_template->save();
         }
         else{
-            $parent_template = $this->templates->$fieldName;
+            $parent_template = $this->templates->$parentTemplateName;
         }
 
 
@@ -249,25 +287,28 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $childSuffixTitle = " " . trim($childSuffix);
         $childSuffixName = strtolower(str_replace(' ', '_', $childSuffixTitle));
 
-        if(!$this->fieldgroups->{$fieldName.$childSuffixName}) {
+        $childTemplateLabel = $form->get('childTemplateOverride')->value ? $form->get('childTemplateOverride')->value : $fieldTitle.$childSuffixTitle;
+        $childTemplateName = $this->sanitizer->fieldName(strtolower($childTemplateLabel));
+
+        if(!$this->fieldgroups->$childTemplateName) {
             $fg = new Fieldgroup();
-            $fg->name = $fieldName.$childSuffixName;
+            $fg->name = $childTemplateName;
             $fg->add("title");
             $fg->save();
         }
         else{
-            $fg = $this->fieldgroups->$fieldName.$childSuffixName;
+            $fg = $this->fieldgroups->$childTemplateName;
         }
 
-        if(!$this->templates->{$fieldName.$childSuffixName}) {
+        if(!$this->templates->$childTemplateName) {
             $child_template = new Template();
-            $child_template->name = $fieldName.$childSuffixName;
-            $child_template->label = $fieldTitle.$childSuffixTitle;
+            $child_template->name = $childTemplateName;
+            $child_template->label = $childTemplateLabel;
             $child_template->fieldgroup = $fg;
             $child_template->save();
         }
         else{
-            $child_template = $this->templates->{$fieldName.$childSuffixName};
+            $child_template = $this->templates->$childTemplateName;
         }
 
 
@@ -317,7 +358,17 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                     //"Bolivia, Plurinational State of",BO,"BOLIVIA, PLURINATIONAL STATE OF",BOL,68
                     $selectFieldTitle = trim(str_replace('"', '', $selectFieldTitle));
 
-                    $selectFieldName = $this->sanitizer->fieldName(strtolower($selectFieldTitle));
+                    if(strpos($selectFieldTitle,'>') !== false){
+                        $selectFieldTitleName = strstr($selectFieldTitle, '>', true);
+                        $selectFieldType = 'Fieldtype' . str_replace($selectFieldTitleName . '>', '', $selectFieldTitle);
+                        $selectFieldName = $this->sanitizer->fieldName(strtolower($selectFieldTitleName));
+                    }
+                    else{
+                        $selectFieldTitleName = $selectFieldTitle;
+                        $selectFieldType = 'FieldtypeText';
+                        $selectFieldName = $this->sanitizer->fieldName(strtolower($selectFieldTitle));
+                    }
+
 
                     if($i==0){ //First loop/line is for field creation. Remaining are for child pages
 
@@ -327,9 +378,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
                             if(!$this->fields->$selectFieldName){
                                 $field = new Field();
-                                $field->type = $this->modules->get('FieldtypeText'); // get a field type
+                                $field->type = $this->modules->get($selectFieldType); // get a field type
                                 $field->name = $selectFieldName;
-                                $field->label = $selectFieldTitle;
+                                $field->label = $selectFieldTitleName;
                                 $field->save(); // save the field
 
                                 $child_template->fieldgroup->append($field); // add new field to template
@@ -384,7 +435,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             $field->type = $this->modules->get('FieldtypePage'); // get a field type
             $field->name = $fieldName;
             $field->label = $fieldTitle;
-            $field->description = sprintf(__("Page field that selects child pages from the parent entitled %s"), $fieldTitle);
+            $field->description = $form->get('fieldDescription')->value ? $form->get('fieldDescription')->value : sprintf(__("Page field that selects child pages from the parent entitled %s"), $fieldTitle);
             $field->derefAsPage = $form->get('derefAsPage')->value;
             $field->parent_id = $page->id;
             $field->template_id = $child_template->id;
