@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 16,
+            'version' => 17,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -350,6 +350,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             if(strpos($selectTitle,',') !== false){ // Creation of child pages using the ADVANCED configuration options - comma should be a good enough indicator to check for
 
                 $x=0;
+                $selectTitle = rtrim($selectTitle,","); //prevent potential creation of blank fields and pages if trailing comma provided
                 foreach(explode(",",$selectTitle) as $selectFieldTitle){
 
                     //Remove any double quote from entries - this is in case people are pasting in default CSV export from PHPMyAdmin etc.
