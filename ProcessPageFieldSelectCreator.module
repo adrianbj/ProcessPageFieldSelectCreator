@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 17,
+            'version' => 18,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -152,27 +152,34 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             __("Double, 2, 2, Fridge Only") . "\n" .
             __("Suite, 3, 6, Full Kitchen");
         $f->notes = __("For the multiple fields option, you can specify titles for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.") . "\n\n" .
-            __("Or you can choose from the following existing text fields:") . "\n\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
+            __("Or you can choose from the following existing text fields:") . "\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
         $f->required = true;
         if($this->session->selectOptions) $f->attr('value', $this->session->selectOptions);
         $form->add($f);
 
         $f = $this->modules->get("InputfieldText");
-        $f->name = "parentTemplateOverride";
-        $f->label = __("Parent Template Name Overrride");
-        $f->description = __("The name of the parent template to be created (or use existing)");
-        $f->notes = __("Only use this if you want to override the automatically generated template name which is based on the field title. Use capitals, spaces etc as this will be used for the template label as well.") . "\n\n" .
-            __("You can choose from the following existing templates:") . "\n\n" . implode(", ", $this->templates->find("flags=0")->getArray());
+        $f->name = "parentTemplate";
+        $f->label = __("Parent Template Label / Name");
+        $f->description = __("The label for the parent template to be created");
+        $f->notes = __("You can leave as is (generated from the Field Title entered above) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.") . "\n\n" .
+            __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->templates->find("flags=0")->getArray());
+        $f->required = true;
         $f->collapsed = Inputfield::collapsedBlank;
         if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
         $form->add($f);
 
+        $f = $this->modules->get("InputfieldHidden");
+        $f->name = "childTemplateSuffix";
+        $f->attr('value', $this->data["childSuffix"]);
+        $form->add($f);
+
         $f = $this->modules->get("InputfieldText");
-        $f->name = "childTemplateOverride";
-        $f->label = __("Child Template Name Override");
-        $f->description = __("The name of the child template to be created (or use existing)");
-        $f->notes = __("Only use this if you want to override the automatically generated template name which is based on the field title plus the child template suffix in the module config settings. Use capitals, spaces etc as this will be used for the template label as well.") . "\n\n" .
-            __("You can choose from the following existing templates:") . "\n\n" . implode(", ", $this->templates->find("flags=0")->getArray());
+        $f->name = "childTemplate";
+        $f->label = __("Child Template Label / Name");
+        $f->description = __("The label for the child template to be created");
+        $f->notes = __("You can leave as is (generated from the Field Title entered above plus the child template suffix in the module config settings) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.") . "\n\n" .
+            __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->templates->find("flags=0")->getArray());
+        $f->required = true;
         $f->collapsed = Inputfield::collapsedBlank;
         if($this->session->fieldTitle) $f->attr('value', $this->session->fieldTitle);
         $form->add($f);
@@ -235,7 +242,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $fieldTitle = $form->get('fieldTitle')->value;
         $fieldName = $this->sanitizer->fieldName(strtolower($fieldTitle));
 
-        $parentTemplateLabel = $form->get('parentTemplateOverride')->value ? $form->get('parentTemplateOverride')->value : $fieldTitle;
+        $parentTemplateLabel = $form->get('parentTemplate')->value;
         $parentTemplateName = $this->sanitizer->fieldName(strtolower($parentTemplateLabel));
 
         $this->session->fieldTitle = $this->sanitizer->textarea($this->input->fieldTitle);
@@ -281,12 +288,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
 
         //Child template
-        $childSuffix = $this->data["childSuffix"];
-
-        $childSuffixTitle = " " . trim($childSuffix);
-        $childSuffixName = strtolower(str_replace(' ', '_', $childSuffixTitle));
-
-        $childTemplateLabel = $form->get('childTemplateOverride')->value ? $form->get('childTemplateOverride')->value : $fieldTitle.$childSuffixTitle;
+        $childTemplateLabel = $form->get('childTemplate')->value;
         $childTemplateName = $this->sanitizer->fieldName(strtolower($childTemplateLabel));
 
         if(!$this->fieldgroups->$childTemplateName) {
