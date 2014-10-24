@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 19,
+            'version' => 20,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -224,6 +224,15 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         if($this->session->addable) $f->attr('value', $this->session->addable);
         $form->add($f);
 
+        $f = $this->modules->get("InputfieldCheckbox");
+        $f->name = "preventaddnewshortcut";
+        $f->label = __("Prevent template for select option pages from being added to the Add Page shortcut menu?");
+        $f->description = __("If checked, the template for the select option pages won't be added to the the 'Add New Page' shortcut button/menu that appears on the main Pages screen.");
+        $f->notes = __("This adds 'noShortcut:1' to templates settings.");
+        $f->attr('checked', $this->session->preventaddnewshortcut == '1' ? 'checked' : '' );
+        if($this->session->preventaddnewshortcut) $f->attr('value', $this->session->preventaddnewshortcut);
+        $form->add($f);
+
 
 
         $this->addSubmit($form, __("Create field, templates, and pages"));
@@ -238,6 +247,10 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     protected function processForm1(InputfieldForm $form) {
 
         $form->processInput($this->input->post);
+        if(count($form->getErrors()) || $form->get('treeParent')->value == ''){
+            $this->error("Missing required field(s)");
+            return $form->render();
+        }
 
         $fieldTitle = $form->get('fieldTitle')->value;
         $fieldName = $this->sanitizer->fieldName(strtolower($fieldTitle));
@@ -252,13 +265,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $this->session->inputfield = $this->input->inputfield;
         $this->session->addable = (int) $this->input->addable;
 
-        if(count($form->getErrors())) $this->session->redirect('./');
-
         if($this->fields->$fieldName) {
             $this->session->fieldTitle = '';
-            $out = '';
-            $out .= "<h2>{$this->_('Field already exists')}</h2><p>{$this->_('The page field you are trying to create already exists.')}</p><p>{$this->_('You can either')} <a href='./'>{$this->_('try again')}</a> {$this->_('with a different Field Title, or')} <a href='{$this->config->urls->admin}setup/field/edit?id={$this->fields->$fieldName->id}'>{$this->_('edit/delete the existing field')}</a>.</p>";
-            return $out;
+            return "<h2>{$this->_('Field already exists')}</h2><p>{$this->_('The page field you are trying to create already exists.')}</p><p>{$this->_('You can either')} <a href='./'>{$this->_('try again')}</a> {$this->_('with a different Field Title, or')} <a href='{$this->config->urls->admin}setup/field/edit?id={$this->fields->$fieldName->id}'>{$this->_('edit/delete the existing field')}</a>.</p>";
         }
 
 
@@ -305,6 +314,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             $child_template = new Template();
             $child_template->name = $childTemplateName;
             $child_template->label = $childTemplateLabel;
+            $child_template->noShortcut = $form->get('preventaddnewshortcut')->value == 1 ? '1' : '';
             $child_template->fieldgroup = $fg;
             $child_template->save();
         }
