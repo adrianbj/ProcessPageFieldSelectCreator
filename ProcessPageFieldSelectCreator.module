@@ -26,8 +26,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 20,
+            'version' => 21,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
+            'href' => 'http://modules.processwire.com/modules/process-page-field-select-creator/',
             'singular' => true,
             'autoload' => false,
             'icon'     => 'bars'
