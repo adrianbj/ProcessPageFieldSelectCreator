@@ -26,9 +26,8 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 21,
+            'version' => 22,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
-            'href' => 'http://modules.processwire.com/modules/process-page-field-select-creator/',
             'singular' => true,
             'autoload' => false,
             'icon'     => 'bars'
@@ -103,15 +102,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
      *
      */
     protected function buildForm1() {
-
-        $defaultInputfieldClasses = array(
-            'InputfieldSelect',
-            'InputfieldSelectMultiple*',
-            'InputfieldCheckboxes*',
-            'InputfieldRadios',
-            'InputfieldAsmSelect*',
-            'InputfieldPageAutocomplete'
-        );
 
         $form = $this->modules->get("InputfieldForm");
         $form->method = 'post';
@@ -208,11 +198,17 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->name = "inputfield";
         $f->label = __("Input field type");
         $f->description = __('The type of field that will be used to select a page. Select one that is consistent with the single page vs. multi-page you chose in the "Dereference in API as" field.');
-        $f->notes = __("* Types indicated with an asterisk are for multiple page selection.");
         $f->required = true;
-        foreach($defaultInputfieldClasses as $option){
-            $f->addOption(str_replace('*','',$option), str_replace('Inputfield','',$option));
+        $f->notes = '* ' . $this->_('Types indicated with an asterisk are for multiple page selection.') . "\n" .
+                    '+ ' . $this->_('Types indicated with a plus assume a "parent" to be the root of a tree, rather than an immediate parent.');
+        foreach($this->modules->get("InputfieldPage")->data['inputfieldClasses'] as $class) {
+            $module = $this->modules->get($class);
+            $label = str_replace("Inputfield", '', $class);
+            if($module instanceof InputfieldHasArrayValue) $label .= "*";
+            if(is_subclass_of($module, 'InputfieldPageListSelection')) $label .= "+";
+            $f->addOption($class, $label);
         }
+
         if($this->session->inputfield) $f->attr('value', $this->session->inputfield);
         $form->add($f);
 
