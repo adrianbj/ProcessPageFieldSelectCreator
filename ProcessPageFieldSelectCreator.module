@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 22,
+            'version' => 23,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -253,7 +253,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $fieldName = $this->sanitizer->fieldName(strtolower($fieldTitle));
 
         $parentTemplateLabel = $form->get('parentTemplate')->value;
-        $parentTemplateName = $this->sanitizer->fieldName(strtolower($parentTemplateLabel));
+        $parentTemplateName = $this->sanitizer->name(strtolower($parentTemplateLabel));
 
         $this->session->fieldTitle = $this->sanitizer->textarea($this->input->fieldTitle);
         $this->session->selectOptions = $this->sanitizer->textarea($this->input->selectOptions);
