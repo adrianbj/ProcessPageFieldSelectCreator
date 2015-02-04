@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 23,
+            'version' => 24,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -336,14 +336,15 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
         //Pages
         //Parent
-        if(!$this->pages->$fieldName){
+        $pageName = $this->sanitizer->pageName($fieldTitle, true);
+        if(!$this->pages->$pageName){
 
             $parent = $this->pages->get($form->get('treeParent')->value);
 
             $page = new Page();
             $page->parent = $parent;
             $page->template = $parent_template;
-            $page->name = $fieldName;
+            $page->name = $pageName;
             $page->title = $fieldTitle;
             $page->of;
             $page->save();
@@ -416,7 +417,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                             $child_page = new Page();
                             $child_page->parent = $page;
                             $child_page->template = $child_template;
-                            $child_page->name = $selectFieldName;
+                            $child_page->name = $this->sanitizer->pageName($selectFieldTitleName, true);
                             $child_page->title = $selectFieldTitle;
                             $child_page->of;
                             $child_page->save();
@@ -437,7 +438,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                 $child_page = new Page();
                 $child_page->parent = $page;
                 $child_page->template = $child_template;
-                $child_page->name = $this->sanitizer->fieldName(strtolower($selectTitle));
+                $child_page->name = $this->sanitizer->pageName($selectTitle, true);
                 $child_page->title = $selectTitle;
                 $child_page->of;
                 $child_page->save();
