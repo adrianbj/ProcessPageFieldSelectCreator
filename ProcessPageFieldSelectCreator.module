@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => 25,
+            'version' => 26,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'singular' => true,
             'autoload' => false,
@@ -145,7 +145,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->notes = __("NB For Option 2a or 2b, \"Title\" must be the first option on the first line.\n\n" .
             "You can use CSV values with commas etc so long as you use double quote enclosures, eg: \"Bolivia, Plurinational State of\", BO, \"BOLIVIA, PLURINATIONAL STATE OF\", BOL, 68\n\n" .
             "For the multiple fields option, you can specify titles for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.") . "\n\n" .
-            "Or you can choose from the following existing text fields:" . "\n" . implode(", ", $this->fields->find("type=FieldtypeText")->getArray());
+            "Or you can choose from the following existing text fields:" . "\ntitle, " . implode(", ", $this->fields->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
         $f->required = true;
         if($this->session->selectOptions) $f->attr('value', $this->session->selectOptions);
         $form->add($f);
@@ -382,7 +382,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                         $selectFieldTitleName = $selectFieldTitle;
                         $selectFieldType = 'FieldtypeText';
                     }
-                    $selectFieldName = $this->sanitizer->fieldName(strtolower($selectFieldTitleName));
+                    $selectFieldName = $this->sanitizer->fieldName(strtolower(trim($selectFieldTitleName)));
 
 
                     if($i==0){ //First loop/line is for field creation. Remaining are for child pages
