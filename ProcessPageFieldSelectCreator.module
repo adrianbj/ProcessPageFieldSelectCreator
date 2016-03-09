@@ -28,6 +28,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             'title' => __('Page Field Select Creator'),
             'version' => 26,
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
+            'author' => 'Adrian Jones',
             'singular' => true,
             'autoload' => false,
             'icon'     => 'bars'
