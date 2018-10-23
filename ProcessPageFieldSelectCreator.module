@@ -147,7 +147,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             "You can use CSV values with commas etc so long as you use double quote enclosures, eg: \"Bolivia, Plurinational State of\", BO, \"BOLIVIA, PLURINATIONAL STATE OF\", BOL, 68\n\n" .
             "For the multiple fields option, you can specify titles for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.") . "\n\n" .
             "Or you can choose from the following existing text fields:" . "\ntitle, " . implode(", ", $this->fields->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
-        $f->required = true;
+        $f->required = false;
         if($this->session->selectOptions) $f->attr('value', $this->session->selectOptions);
         $form->add($f);
 
@@ -184,6 +184,25 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->required = true;
         $f->description = __("The parent where you want the parent of the selectable pages created. For example you may want to choose a hidden 'Options' parent page.");
         if($this->session->treeParent) $f->attr('value', $this->session->treeParent);
+        $form->add($f);
+
+        $f = $this->modules->get('InputfieldCheckbox');
+        $f->name = "noChangeTemplate";
+        $f->label = __("Don't allow pages to change their template?");
+        $f->description = __("When checked, pages using this template will be unable to change to another template."); // noChangeTemplate option, description
+        $f->attr('checked', $this->session->noChangeTemplate == '1' ? 'checked' : '' );
+        if($this->session->noChangeTemplate) $f->attr('value', $this->session->noChangeTemplate);
+        $form->add($f);
+
+        $f = $this->modules->get("InputfieldRadios"); 
+        $f->name = "noParents";
+        $f->label = __('Can the parent template be used for new pages?');
+        $f->required = true;
+        $f->addOption(0, __('Yes'));
+        $f->addOption(1, __('No'));
+        $f->addOption(-1, __('One'));
+        $this->session->noParents ? $f->attr('value', $this->session->noParents) : $f->attr('value', 1);
+        $f->optionColumns = 1; 
         $form->add($f);
 
         $f = $this->modules->get("InputfieldRadios");
@@ -261,6 +280,8 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $this->session->fieldTitle = $this->sanitizer->textarea($this->input->fieldTitle);
         $this->session->selectOptions = $this->sanitizer->textarea($this->input->selectOptions);
         $this->session->treeParent = (int) $this->input->treeParent;
+        $this->session->noChangeTemplate = (int) $this->input->noChangeTemplate;
+        $this->session->noParents = (int) $this->input->noParents;
         $this->session->derefAsPage = (int) $this->input->derefAsPage;
         $this->session->inputfield = $this->input->inputfield;
         $this->session->addable = (int) $this->input->addable;
@@ -289,6 +310,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             $parent_template->name = $parentTemplateName;
             $parent_template->label = $parentTemplateLabel;
             $parent_template->fieldgroup = $fg;
+            $parent_template->noChangeTemplate = $form->get('noChangeTemplate')->value;
             $parent_template->save();
         }
         else{
@@ -326,7 +348,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         //Templates - second iteration to save settings.
 
         //Parent Template
-        $parent_template->noParents = 1;
+        $parent_template->noParents = $form->get('noParents')->value;
         $parent_template->childTemplates = array($child_template->id);
         $parent_template->save();
 
@@ -356,94 +378,98 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
         //Child pages - ie select options
         $i=0;
-        $selectOptions = trim(preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $form->get('selectOptions')->value),"\n"); // remove any blank lines from the textarea
 
-        if(strpos($selectOptions,',') !== false) $selectOptions = stristr($selectOptions, "Title"); //if Option 2, then need to remove anything from before "Title"
+        if(!empty($form->get('selectOptions')->value)) {
+            $selectOptions = trim(preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $form->get('selectOptions')->value),"\n"); // remove any blank lines from the textarea
 
-        foreach(explode("\n",$selectOptions) as $selectTitle){
+            if(strpos($selectOptions,',') !== false) $selectOptions = stristr($selectOptions, "Title"); //if Option 2, then need to remove anything from before "Title"
 
-            if(strpos($selectTitle,',') !== false){ // Creation of child pages using Option 2 configuration options - comma should be a good enough indicator to check for
+            foreach(explode("\n",$selectOptions) as $selectTitle){
 
-                $x=0;
+                if(strpos($selectTitle,',') !== false){ // Creation of child pages using Option 2 configuration options - comma should be a good enough indicator to check for
 
-                if($i==0){
-                    $selectTitle = trim($selectTitle,", \t\0\x0B"); //prevent potential creation of blank fields and pages if leading or trailing comma etc provided
-                }
-                else{
-                    $selectTitle = ltrim($selectTitle,", \t\0\x0B"); //not first row so only want to remove leading commas etc, because trailing ones could be blank field values
-                }
+                    $x=0;
 
-                foreach(str_getcsv($selectTitle) as $selectFieldTitle){
-
-                    if(strpos($selectFieldTitle,'>') !== false){
-                        $selectFieldTitleName = strstr($selectFieldTitle, '>', true);
-                        $selectFieldType = 'Fieldtype' . str_replace($selectFieldTitleName . '>', '', $selectFieldTitle);
+                    if($i==0){
+                        $selectTitle = trim($selectTitle,", \t\0\x0B"); //prevent potential creation of blank fields and pages if leading or trailing comma etc provided
                     }
                     else{
-                        $selectFieldTitleName = $selectFieldTitle;
-                        $selectFieldType = 'FieldtypeText';
+                        $selectTitle = ltrim($selectTitle,", \t\0\x0B"); //not first row so only want to remove leading commas etc, because trailing ones could be blank field values
                     }
-                    $selectFieldName = $this->sanitizer->fieldName(strtolower(trim($selectFieldTitleName)));
 
+                    foreach(str_getcsv($selectTitle) as $selectFieldTitle){
 
-                    if($i==0){ //First loop/line is for field creation. Remaining are for child pages
-
-                        if($selectFieldName != 'title' && $selectFieldName != '') { //No need to create title field, and don't want to create a field with no name - possible if trailing comma left in place
-
-                            $sub_field[$x] = $selectFieldName; // Store name of fields for later population of values in child page
-
-                            if(!$this->fields->$selectFieldName){
-                                $field = new Field();
-                                $field->type = $this->modules->get($selectFieldType); // get a field type
-                                $field->name = $selectFieldName;
-                                $field->label = $selectFieldTitleName;
-                                $field->save(); // save the field
-
-                                $child_template->fieldgroup->append($field); // add new field to template
-                            }
-                            else{
-                                $child_template->fieldgroup->append($this->fields->$selectFieldName); // add existing field to template - NB: this does not change any of the attributes of a field if it already exists - this could be problematic
-                            }
-
-                            $child_template->fieldgroup->save();
+                        if(strpos($selectFieldTitle,'>') !== false){
+                            $selectFieldTitleName = strstr($selectFieldTitle, '>', true);
+                            $selectFieldType = 'Fieldtype' . str_replace($selectFieldTitleName . '>', '', $selectFieldTitle);
                         }
-
-                    }
-                    else{ // All but first loop - for creating child pages from the rest of the lines in the select options textarea
-
-                        if($x==0 && $selectFieldName != ''){ // First value in comma separated row should be the title, so create the child page with this
-                            $child_page = new Page();
-                            $child_page->parent = $page;
-                            $child_page->template = $child_template;
-                            $child_page->name = $this->sanitizer->pageName($selectFieldTitleName, true);
-                            $child_page->title = $selectFieldTitle;
-                            $child_page->of;
-                            $child_page->save();
+                        else{
+                            $selectFieldTitleName = $selectFieldTitle;
+                            $selectFieldType = 'FieldtypeText';
                         }
-                        else{ // Add values for the other fields to the child page
-                            if(isset($child_page) && $child_page->id && isset($sub_field) && isset($sub_field[$x])){
-                                $child_page->$sub_field[$x] = $selectFieldTitle;
+                        $selectFieldName = $this->sanitizer->fieldName(strtolower(trim($selectFieldTitleName)));
+
+
+                        if($i==0){ //First loop/line is for field creation. Remaining are for child pages
+
+                            if($selectFieldName != 'title' && $selectFieldName != '') { //No need to create title field, and don't want to create a field with no name - possible if trailing comma left in place
+
+                                $sub_field[$x] = $selectFieldName; // Store name of fields for later population of values in child page
+
+                                if(!$this->fields->$selectFieldName){
+                                    $field = new Field();
+                                    $field->type = $this->modules->get($selectFieldType); // get a field type
+                                    $field->name = $selectFieldName;
+                                    $field->label = $selectFieldTitleName;
+                                    $field->save(); // save the field
+
+                                    $child_template->fieldgroup->append($field); // add new field to template
+                                }
+                                else{
+                                    $child_template->fieldgroup->append($this->fields->$selectFieldName); // add existing field to template - NB: this does not change any of the attributes of a field if it already exists - this could be problematic
+                                }
+
+                                $child_template->fieldgroup->save();
+                            }
+
+                        }
+                        else{ // All but first loop - for creating child pages from the rest of the lines in the select options textarea
+
+                            if($x==0 && $selectFieldName != ''){ // First value in comma separated row should be the title, so create the child page with this
+                                $child_page = new Page();
+                                $child_page->parent = $page;
+                                $child_page->template = $child_template;
+                                $child_page->name = $this->sanitizer->pageName($selectFieldTitleName, true);
+                                $child_page->title = $selectFieldTitle;
+                                $child_page->of;
                                 $child_page->save();
                             }
+                            else{ // Add values for the other fields to the child page
+                                if(isset($child_page) && $child_page->id && isset($sub_field) && isset($sub_field[$x])){
+                                    $child_page->$sub_field[$x] = $selectFieldTitle;
+                                    $child_page->save();
+                                }
+                            }
+
                         }
 
+                        $x++;
                     }
-
-                    $x++;
                 }
-            }
-            else{ // Creation of child pages using the SIMPLE configuration option
-                $child_page = new Page();
-                $child_page->parent = $page;
-                $child_page->template = $child_template;
-                $child_page->name = $this->sanitizer->pageName($selectTitle, true);
-                $child_page->title = $selectTitle;
-                $child_page->of;
-                $child_page->save();
-            }
+                else{ // Creation of child pages using the SIMPLE configuration option
+                    $child_page = new Page();
+                    $child_page->parent = $page;
+                    $child_page->template = $child_template;
+                    $child_page->name = $this->sanitizer->pageName($selectTitle, true);
+                    $child_page->title = $selectTitle;
+                    $child_page->of;
+                    $child_page->save();
+                }
 
-            $i++;
+                $i++;
+            }
         }
+
 
 
 
