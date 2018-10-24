@@ -1,5 +1,4 @@
-ProcessPageFieldSelectCreator
-=============================
+# ProcessPageFieldSelectCreator
 
 This module provides a way to rapidly generate Page fields and the required templates and pages for use as a drop down select (or any other Page field type).
 
@@ -43,7 +42,7 @@ The templates are configured such that the "room_types_items" child template can
 Then all you have to do is add the newly created page field to any template you want and you're ready to go!
 
 
-##How to install
+## How to install
 
 Download and place the module folder named "ProcessPageFieldSelectCreator" in: /site/modules/
 
@@ -54,12 +53,12 @@ Now scroll to the ProcessPageFieldSelectCreator module and click "Install".
 Optional configuration option to set the suffix that you want to add to the end of the template name for the child pages. The default 'Items' will be converted to '_items' for the name.
 
 
-##Usage
+## Usage
 
 Go to the Setup Page > Page Field Select Creator and follow the prompts.
 
 
-##Support
+## Support
 
 http://processwire.com/talk/topic/4523-page-field-select-creator/
 
