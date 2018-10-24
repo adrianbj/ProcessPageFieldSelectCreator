@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.3.0',
+            'version' => '0.3.1',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -209,9 +209,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->label = __("Dereference in API as");
         $f->description = __("If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support selection of a single item (page), then select one of the single Page options (if you are not sure which, select the last option).");
         $f->required = true;
-        $f->addOption('0', __('Multiple pages (PageArray)'));
-        $f->addOption('1', __('Single page (Page) or boolean false when none selected'));
-        $f->addOption('2', __('Single page (Page) or empty page (NullPage) when none selected'));
+        $f->addOption('0', __('Multiple pages&nbsp;(PageArray)'));
+        $f->addOption('1', __('Single page&nbsp;(Page) or boolean false when none selected'));
+        $f->addOption('2', __('Single page&nbsp;(Page) or empty page&nbsp;(NullPage) when none selected'));
         $this->wire('session')->derefAsPage ? $f->attr('value', $this->wire('session')->derefAsPage) : $f->attr('value', 0);
         $form->add($f);
 
@@ -236,7 +236,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f = $this->wire('modules')->get("InputfieldCheckbox");
         $f->name = "addable";
         $f->label = __("Allow new pages to be created from field?");
-        $f->description = __("If checked, an option to add new page(s) will also be present if the editing user has access to create/publish these pages.");
+        $f->description = __("If checked, an option to add new pages will also be present if the editing user has access to create/publish these pages.");
         $f->notes = __("All other requirements (parent & template selected and label-field set to title) for this feature to work are set automatically.");
         $f->attr('checked', $this->wire('session')->addable == '1' ? 'checked' : '' );
         if($this->wire('session')->addable) $f->attr('value', $this->wire('session')->addable);
