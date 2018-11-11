@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.3.1',
+            'version' => '0.3.2',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -265,7 +265,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     protected function processForm1(InputfieldForm $form) {
 
         $form->processInput($this->wire('input')->post);
-        if(count($form->getErrors()) || $form->get('treeParent')->value == ''){
+        if(count($form->getErrors()) || $form->get('treeParent')->value == '') {
             $this->error("Missing required field(s)");
             return $form->render();
         }
@@ -361,9 +361,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         //Pages
         //Parent
         $pageName = $this->wire('sanitizer')->pageName($fieldTitle, true);
-        if(!$this->pages->$pageName){
+        if(!$this->wire('pages')->$pageName) {
 
-            $parent = $this->pages->get($form->get('treeParent')->value);
+            $parent = $this->wire('pages')->get($form->get('treeParent')->value);
 
             $page = new Page();
             $page->parent = $parent;
@@ -378,27 +378,27 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         //Child pages - ie select options
         $i=0;
 
-        if(!empty($form->get('selectOptions')->value)) {
+        if($form->get('selectOptions')->value != '') {
             $selectOptions = trim(preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $form->get('selectOptions')->value),"\n"); // remove any blank lines from the textarea
 
             if(strpos($selectOptions,',') !== false) $selectOptions = stristr($selectOptions, "Title"); //if Option 2, then need to remove anything from before "Title"
 
-            foreach(explode("\n",$selectOptions) as $selectTitle){
+            foreach(explode("\n",$selectOptions) as $selectTitle) {
 
-                if(strpos($selectTitle,',') !== false){ // Creation of child pages using Option 2 configuration options - comma should be a good enough indicator to check for
+                if(strpos($selectTitle,',') !== false) { // Creation of child pages using Option 2 configuration options - comma should be a good enough indicator to check for
 
                     $x=0;
 
-                    if($i==0){
+                    if($i==0) {
                         $selectTitle = trim($selectTitle,", \t\0\x0B"); //prevent potential creation of blank fields and pages if leading or trailing comma etc provided
                     }
                     else {
                         $selectTitle = ltrim($selectTitle,", \t\0\x0B"); //not first row so only want to remove leading commas etc, because trailing ones could be blank field values
                     }
 
-                    foreach(str_getcsv($selectTitle) as $selectFieldTitle){
+                    foreach(str_getcsv($selectTitle) as $selectFieldTitle) {
 
-                        if(strpos($selectFieldTitle,'>') !== false){
+                        if(strpos($selectFieldTitle,'>') !== false) {
                             $selectFieldTitleName = strstr($selectFieldTitle, '>', true);
                             $selectFieldType = 'Fieldtype' . str_replace($selectFieldTitleName . '>', '', $selectFieldTitle);
                         }
@@ -409,13 +409,13 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                         $selectFieldName = $this->wire('sanitizer')->fieldName(strtolower(trim($selectFieldTitleName)));
 
 
-                        if($i==0){ //First loop/line is for field creation. Remaining are for child pages
+                        if($i==0) { //First loop/line is for field creation. Remaining are for child pages
 
                             if($selectFieldName != 'title' && $selectFieldName != '') { //No need to create title field, and don't want to create a field with no name - possible if trailing comma left in place
 
                                 $sub_field[$x] = $selectFieldName; // Store name of fields for later population of values in child page
 
-                                if(!$this->wire('fields')->$selectFieldName){
+                                if(!$this->wire('fields')->$selectFieldName) {
                                     $field = new Field();
                                     $field->type = $this->wire('modules')->get($selectFieldType); // get a field type
                                     $field->name = $selectFieldName;
@@ -434,7 +434,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                         }
                         else { // All but first loop - for creating child pages from the rest of the lines in the select options textarea
 
-                            if($x==0 && $selectFieldName != ''){ // First value in comma separated row should be the title, so create the child page with this
+                            if($x==0 && $selectFieldName != '') { // First value in comma separated row should be the title, so create the child page with this
                                 $child_page = new Page();
                                 $child_page->parent = $page;
                                 $child_page->template = $child_template;
@@ -444,7 +444,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
                                 $child_page->save();
                             }
                             else { // Add values for the other fields to the child page
-                                if(isset($child_page) && $child_page->id && isset($sub_field) && isset($sub_field[$x])){
+                                if(isset($child_page) && $child_page->id && isset($sub_field) && isset($sub_field[$x])) {
                                     $child_page->$sub_field[$x] = $selectFieldTitle;
                                     $child_page->save();
                                 }
@@ -473,7 +473,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
 
         //Page Field
-        if(!$this->wire('fields')->$fieldName && $fieldName != ''){
+        if(!$this->wire('fields')->$fieldName && $fieldName != '') {
             $field = new Field();
             $field->type = $this->wire('modules')->get('FieldtypePage'); // get a field type
             $field->name = $fieldName;
