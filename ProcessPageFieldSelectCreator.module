@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.4.0',
+            'version' => '0.4.1',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -107,27 +107,38 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
         $form = $this->wire('modules')->get("InputfieldForm");
         $form->method = 'post';
-        $form->description = "Settings";
+
+        $fieldset = $this->wire('modules')->get("InputfieldFieldset");
+        $fieldset->label = __('Required settings', __FILE__);
+        $form->add($fieldset);
 
         $f = $this->wire('modules')->get("InputfieldText");
         $f->name = "fieldLabel";
-        $f->label = __("Field Label");
+        $f->label = __("Field label");
         $f->required = true;
         $f->description = __("The label of the page field to be created. eg. Room Types");
         $f->notes = __("Use capitals, spaces etc as this is also used for the parent page name and various labels.");
         if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
-        $form->add($f);
+        $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldText");
         $f->name = "fieldDescription";
-        $f->label = __("Field Description");
+        $f->label = __("Field description");
         $f->description = __("The description for the page field to be created.");
         if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
-        $form->add($f);
+        $fieldset->add($f);
+
+        $f = $this->wire('modules')->get("InputfieldPageListSelect");
+        $f->name = "grandParent";
+        $f->label = __("Grandparent page");
+        $f->required = true;
+        $f->description = __("Select the grandparent where the parent of the selectable pages will be created. For example you may want to choose a dedicated 'Options' grandparent page.");
+        if($this->wire('session')->grandParent) $f->attr('value', $this->wire('session')->grandParent);
+        $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldTextarea");
         $f->name = "selectOptions";
-        $f->label = __("Select Options");
+        $f->label = __("Select options");
         $f->description = __("These will become the child pages that will populate the page field select options. There are two different options.") . "\n\n" .
             __("Option 1. TITLE FIELD ONLY - enter one option per line, eg:") . "\n\n" .
             __("Single") . "\n" .
@@ -149,78 +160,18 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             "Or you can choose from the following existing text fields:" . "\ntitle, " . implode(", ", $this->wire('fields')->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
         $f->required = false;
         if($this->wire('session')->selectOptions) $f->attr('value', $this->wire('session')->selectOptions);
-        $form->add($f);
-
-        $f = $this->wire('modules')->get("InputfieldText");
-        $f->name = "parentTemplate";
-        $f->label = __("Parent Template Label / Name");
-        $f->description = __("The label for the parent template to be created");
-        $f->notes = __("You can leave as is (generated from the Field Label entered above) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.") . "\n\n" .
-            __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
-        $f->required = true;
-        if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
-        $form->add($f);
-
-        $f = $this->wire('modules')->get("InputfieldHidden");
-        $f->name = "childTemplateSuffix";
-        $f->attr('value', $this->data["childSuffix"]);
-        $form->add($f);
-
-        $f = $this->wire('modules')->get("InputfieldText");
-        $f->name = "childTemplate";
-        $f->label = __("Child Template Label / Name");
-        $f->description = __("The label for the child template to be created");
-        $f->notes = __("You can leave as is (generated from the Field Label entered above plus the child template suffix in the module config settings) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.") . "\n\n" .
-            __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
-        $f->required = true;
-        if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
-        $form->add($f);
-
-        $f = $this->wire('modules')->get("InputfieldText");
-        $f->name = "parentPageTitle";
-        $f->label = __("Parent Page Title");
-        $f->description = __("The title for the parent page to be created");
-        $f->notes = __("You can leave as is (generated from the Field Label entered above or change if you wish. Use capitals, spaces etc. The page name will be converted from the entered title.");
-        if($this->wire('session')->parentPageTitle) $f->attr('value', $this->wire('session')->parentPageTitle);
-        $form->add($f);
-
-        $f = $this->wire('modules')->get("InputfieldPageListSelect");
-        $f->name = "treeParent";
-        $f->label = __("Parent Page");
-        $f->required = true;
-        $f->description = __("The parent where you want the parent of the selectable pages created. For example you may want to choose a hidden 'Options' parent page.");
-        if($this->wire('session')->treeParent) $f->attr('value', $this->wire('session')->treeParent);
-        $form->add($f);
-
-        $f = $this->wire('modules')->get('InputfieldCheckbox');
-        $f->name = "noChangeTemplate";
-        $f->label = __("Don't allow pages to change their template?");
-        $f->description = __("When checked, pages using this template will be unable to be changed to another template."); // noChangeTemplate option, description
-        $f->attr('checked', $this->wire('session')->noChangeTemplate == '1' ? 'checked' : '' );
-        if($this->wire('session')->noChangeTemplate) $f->attr('value', $this->wire('session')->noChangeTemplate);
-        $form->add($f);
-
-        $f = $this->wire('modules')->get("InputfieldRadios");
-        $f->name = "noParents";
-        $f->label = __('Can the parent template be used for new pages?');
-        $f->required = true;
-        $f->addOption(0, __('Yes'));
-        $f->addOption(1, __('No'));
-        $f->addOption(-1, __('One'));
-        $this->wire('session')->noParents ? $f->attr('value', $this->wire('session')->noParents) : $f->attr('value', 1);
-        $f->optionColumns = 1;
-        $form->add($f);
+        $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldRadios");
         $f->name = "derefAsPage";
-        $f->label = __("Dereference in API as");
+        $f->label = __("Page field value type");
         $f->description = __("If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support selection of a single item (page), then select one of the single Page options (if you are not sure which, select the last option).");
         $f->required = true;
         $f->addOption('0', __('Multiple pages&nbsp;(PageArray)'));
         $f->addOption('1', __('Single page&nbsp;(Page) or boolean false when none selected'));
         $f->addOption('2', __('Single page&nbsp;(Page) or empty page&nbsp;(NullPage) when none selected'));
         $this->wire('session')->derefAsPage ? $f->attr('value', $this->wire('session')->derefAsPage) : $f->attr('value', 0);
-        $form->add($f);
+        $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldSelect");
         $f->name = "inputfield";
@@ -234,11 +185,68 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
             $label = str_replace("Inputfield", '', $class);
             if($module instanceof InputfieldHasArrayValue) $label .= "*";
             if(is_subclass_of($module, 'InputfieldPageListSelection')) $label .= "+";
-            $f->addOption($class, $label);
+            if($class != '') {
+                $f->addOption($class, $label);
+            }
         }
-
         if($this->wire('session')->inputfield) $f->attr('value', $this->wire('session')->inputfield);
-        $form->add($f);
+        $fieldset->add($f);
+
+        $fieldset = $this->wire('modules')->get("InputfieldFieldset");
+        $fieldset->label = __('Optional settings', __FILE__);
+        $form->add($fieldset);
+
+        $f = $this->wire('modules')->get("InputfieldText");
+        $f->name = "parentTemplate";
+        $f->label = __("Parent template label / name");
+        $f->description = __("The label for the parent template to be created");
+        $f->notes = __("You can leave as is (generated from the Field Label entered above) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.") . "\n\n" .
+            __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
+        $f->required = true;
+        if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
+        $fieldset->add($f);
+
+        $f = $this->wire('modules')->get("InputfieldHidden");
+        $f->name = "childTemplateSuffix";
+        $f->attr('value', $this->data["childSuffix"]);
+        $fieldset->add($f);
+
+        $f = $this->wire('modules')->get("InputfieldText");
+        $f->name = "childTemplate";
+        $f->label = __("Child template label / name");
+        $f->description = __("The label for the child template to be created");
+        $f->notes = __("You can leave as is (generated from the Field Label entered above plus the child template suffix in the module config settings) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.") . "\n\n" .
+            __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
+        $f->required = true;
+        if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
+        $fieldset->add($f);
+
+        $f = $this->wire('modules')->get("InputfieldText");
+        $f->name = "parentPageTitle";
+        $f->label = __("Parent page title");
+        $f->description = __("The title for the parent page to be created");
+        $f->notes = __("You can leave as is (generated from the Field Label entered above or change if you wish. Use capitals, spaces etc. The page name will be converted from the entered title.");
+        if($this->wire('session')->parentPageTitle) $f->attr('value', $this->wire('session')->parentPageTitle);
+        $fieldset->add($f);
+
+        $f = $this->wire('modules')->get('InputfieldCheckbox');
+        $f->name = "noChangeTemplate";
+        $f->label = __("Don't allow pages to change their template?");
+        $f->description = __("When checked, pages using this template will be unable to be changed to another template."); // noChangeTemplate option, description
+        $f->attr('checked', $this->wire('session')->noChangeTemplate == '1' ? 'checked' : '' );
+        if($this->wire('session')->noChangeTemplate) $f->attr('value', $this->wire('session')->noChangeTemplate);
+        $fieldset->add($f);
+
+        $f = $this->wire('modules')->get("InputfieldRadios");
+        $f->name = "noParents";
+        $f->label = __('Can the parent template be used for new pages?');
+        $f->required = true;
+        $f->addOption(0, __('Yes'));
+        $f->addOption(1, __('No'));
+        $f->addOption(-1, __('One'));
+        $this->wire('session')->noParents ? $f->attr('value', $this->wire('session')->noParents) : $f->attr('value', 1);
+        $f->optionColumns = 1;
+        $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldCheckbox");
         $f->name = "addable";
@@ -247,7 +255,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->notes = __("All other requirements (parent & template selected and label-field set to title) for this feature to work are set automatically.");
         $f->attr('checked', $this->wire('session')->addable == '1' ? 'checked' : '' );
         if($this->wire('session')->addable) $f->attr('value', $this->wire('session')->addable);
-        $form->add($f);
+        $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldCheckbox");
         $f->name = "preventaddnewshortcut";
@@ -256,7 +264,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $f->notes = __("This adds 'noShortcut:1' to templates settings.");
         $f->attr('checked', $this->wire('session')->preventaddnewshortcut == '1' ? 'checked' : '' );
         if($this->wire('session')->preventaddnewshortcut) $f->attr('value', $this->wire('session')->preventaddnewshortcut);
-        $form->add($f);
+        $fieldset->add($f);
 
         $this->addSubmit($form, __("Create field, templates, and pages"));
 
@@ -271,7 +279,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
     protected function processForm1(InputfieldForm $form) {
 
         $form->processInput($this->wire('input')->post);
-        if(count($form->getErrors()) || $form->get('treeParent')->value == '') {
+        if(count($form->getErrors()) || $form->get('grandParent')->value == '') {
             $this->error("Missing required field(s)");
             return $form->render();
         }
@@ -285,7 +293,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
         $this->wire('session')->fieldLabel = $this->wire('sanitizer')->text($this->wire('input')->fieldLabel);
         $this->wire('session')->parentPageTitle = $this->wire('sanitizer')->text($this->wire('input')->parentPageTitle);
         $this->wire('session')->selectOptions = $this->wire('sanitizer')->textarea($this->wire('input')->selectOptions);
-        $this->wire('session')->treeParent = (int) $this->wire('input')->treeParent;
+        $this->wire('session')->grandParent = (int) $this->wire('input')->grandParent;
         $this->wire('session')->noChangeTemplate = (int) $this->wire('input')->noChangeTemplate;
         $this->wire('session')->noParents = (int) $this->wire('input')->noParents;
         $this->wire('session')->derefAsPage = (int) $this->wire('input')->derefAsPage;
@@ -366,12 +374,12 @@ class ProcessPageFieldSelectCreator extends Process implements Module, Configura
 
         // Pages
         // Parent
-        $treeParent = $this->wire('pages')->get($form->get('treeParent')->value);
+        $grandParent = $this->wire('pages')->get($form->get('grandParent')->value);
         $parentPageTitle = $form->get('parentPageTitle')->value;
         $parentPageName = $this->wire('sanitizer')->pageName($parentPageTitle, true);
-        if(!$this->wire('pages')->get("parent=$treeParent, name=$parentPageName")->id) {
+        if(!$this->wire('pages')->get("parent=$grandParent, name=$parentPageName")->id) {
             $parentPage = new Page();
-            $parentPage->parent = $treeParent;
+            $parentPage->parent = $grandParent;
             $parentPage->template = $parentTemplate;
             $parentPage->name = $parentPageName;
             $parentPage->title = $parentPageTitle;
