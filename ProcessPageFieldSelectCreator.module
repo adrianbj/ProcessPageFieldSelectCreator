@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.1',
+            'version' => '0.5.2',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,

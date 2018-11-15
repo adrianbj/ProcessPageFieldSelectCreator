@@ -1,8 +1,8 @@
 $(window).load(function() {
     $('#Inputfield_fieldLabel').bind('keyup change', function() {
         var field_label = $('#Inputfield_fieldLabel').val();
-        var plural = pluralize(field_label);
-        var singular = pluralize(field_label, 1);
+        var plural = pluralize.plural(field_label);
+        var singular = pluralize.singular(field_label);
         $('#Inputfield_parentTemplate').val(plural);
         $('#Inputfield_childTemplate').val(singular);
         $('#Inputfield_parentPageTitle').val(plural);
