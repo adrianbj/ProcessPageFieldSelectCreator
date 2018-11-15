@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.0',
+            'version' => '0.5.1',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -88,14 +88,12 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->attr('requiredAttr', 1);
         $f->description = __("The label of the page field to be created. eg. Room Types");
         $f->notes = __("Use capitals, spaces etc as this is also used for the parent page name and various labels.");
-        if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldText");
         $f->name = "fieldDescription";
         $f->label = __("Field description");
         $f->description = __("The description for the page field to be created.");
-        if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldPageListSelect");
@@ -131,7 +129,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             "Or you can choose from the following existing text fields:" . "\ntitle, " . implode(", ", $this->wire('fields')->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
         $f->required = true;
         $f->attr('requiredAttr', 1);
-        if($this->wire('session')->selectOptions) $f->attr('value', $this->wire('session')->selectOptions);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldRadios");
@@ -149,21 +146,38 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f = $this->wire('modules')->get("InputfieldSelect");
         $f->name = "inputfield";
         $f->label = __("Input field type");
-        $f->description = __('The type of field that will be used to select a page. Select one that is consistent with the single page vs. multi-page you chose in the "Dereference in API as" field.');
+        $f->description = __('The type of field that will be used to select a page. Select one that is consistent with the single page vs. multi-page you chose in the "Page field value type" field.');
         $f->required = true;
         $f->attr('requiredAttr', 1);
-        $f->notes = '* ' . $this->_('Types indicated with an asterisk are for multiple page selection.') . "\n" .
-                    '+ ' . $this->_('Types indicated with a plus assume a "parent" to be the root of a tree, rather than an immediate parent.');
+
+        $singles = array();
+        $multiples = array();
+        $sortables = array();
+        $pageListTypes = array();
+
         foreach($this->wire('modules')->get("InputfieldPage")->data['inputfieldClasses'] as $class) {
-            $module = $this->wire('modules')->get($class);
-            $label = str_replace("Inputfield", '', $class);
-            if($module instanceof InputfieldHasArrayValue) $label .= "*";
-            if(is_subclass_of($module, 'InputfieldPageListSelection')) $label .= "+";
-            if($class != '' && $class != '&nbsp;') {
-                $f->addOption($class, $label);
+            $module = $this->modules->getModule($class, array('noInit' => true));
+            $info = $this->modules->getModuleInfo($module);
+            $label = ucfirst($info['title']);
+            if($module instanceof InputfieldPageListSelection) {
+                $pageListTypes[] = $class;
             }
+            if($module instanceof InputfieldHasSortableValue) {
+                $sortables[$class] = $label;
+            } else if($module instanceof InputfieldHasArrayValue) {
+                $multiples[$class] = $label;
+            } else {
+                $singles[$class] = $label;
+            }
+            if($class == 'InputfieldPageAutocomplete') $singles["_$class"] = $label;
         }
-        if($this->wire('session')->inputfield) $f->attr('value', $this->wire('session')->inputfield);
+
+        $multiLabel = $this->_('Multiple page selection');
+        $f->addOption($this->_('Single page selection'), $singles);
+        $f->addOption($multiLabel, $multiples);
+        $f->addOption($multiLabel . ' (' . $this->_('sortable') . ')', $sortables);
+
+        $this->wire('session')->inputfield ? $f->attr('value', $this->wire('session')->inputfield) : $f->attr('value', 'InputfieldAsmSelect');
         $fieldset->add($f);
 
         $fieldset = $this->wire('modules')->get("InputfieldFieldset");
@@ -178,7 +192,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
         $f->required = true;
         $f->attr('requiredAttr', 1);
-        if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldText");
@@ -189,7 +202,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
         $f->required = true;
         $f->attr('requiredAttr', 1);
-        if($this->wire('session')->fieldLabel) $f->attr('value', $this->wire('session')->fieldLabel);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldText");
@@ -199,7 +211,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->notes = __("You can leave as is (generated from the Field Label entered above or change if you wish. Use capitals, spaces etc. The page name will be converted from the entered title.");
         $f->required = true;
         $f->attr('requiredAttr', 1);
-        if($this->wire('session')->parentPageTitle) $f->attr('value', $this->wire('session')->parentPageTitle);
         $fieldset->add($f);
 
         $fieldset = $this->wire('modules')->get("InputfieldFieldset");
@@ -271,18 +282,15 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $parentTemplateLabel = $form->get('parentTemplate')->value;
         $parentTemplateName = $this->wire('sanitizer')->name(strtolower($parentTemplateLabel));
 
-        $this->wire('session')->fieldLabel = $this->wire('sanitizer')->text($this->wire('input')->fieldLabel);
-        $this->wire('session')->parentPageTitle = $this->wire('sanitizer')->text($this->wire('input')->parentPageTitle);
-        $this->wire('session')->selectOptions = $this->wire('sanitizer')->textarea($this->wire('input')->selectOptions);
         $this->wire('session')->grandParent = (int) $this->wire('input')->grandParent;
         $this->wire('session')->noChangeTemplate = (int) $this->wire('input')->noChangeTemplate;
         $this->wire('session')->noParents = (int) $this->wire('input')->noParents;
         $this->wire('session')->derefAsPage = (int) $this->wire('input')->derefAsPage;
         $this->wire('session')->inputfield = $this->wire('input')->inputfield;
         $this->wire('session')->addable = (int) $this->wire('input')->addable;
+        $this->wire('session')->preventaddnewshortcut = (int) $this->wire('input')->preventaddnewshortcut;
 
         if($this->wire('fields')->$fieldName) {
-            $this->wire('session')->fieldLabel = '';
             return "<h2>{$this->_('Field already exists')}</h2><p>{$this->_('The page field you are trying to create already exists.')}</p><p>{$this->_('You can either')} <a href='./'>{$this->_('try again')}</a> {$this->_('with a different Field Label, or')} <a href='{$this->config->urls->admin}setup/field/edit?id={$this->wire('fields')->$fieldName->id}'>{$this->_('edit/delete the existing field')}</a>.</p>";
         }
 
@@ -490,15 +498,12 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
      */
     protected function processFormMarkup($field, $parentTemplate, $childTemplate, $parentPage) {
 
-        $this->wire('session')->fieldLabel = '';
-        $this->wire('session')->selectOptions = '';
-
         $out = '';
         $out .= "<h2>Created all required templates and pages for the $field->label field</h2>" .
-            "<p><a href='{$this->config->urls->admin}setup/field/edit?id={$field->id}'>{$this->_('View the created page field')}</a></p>
+            "<p><a href='{$this->config->urls->admin}setup/field/edit?id={$field->id}'>{$this->_('View the created page reference field')}</a></p>
             <p><a href='{$this->config->urls->admin}setup/template/edit?id={$parentTemplate->id}'>{$this->_('View the parent template')}</a></p>
             <p><a href='{$this->config->urls->admin}setup/template/edit?id={$childTemplate->id}'>{$this->_('View the child template')}</a></p>
-            <p><a href='{$this->config->urls->admin}page/list/?open={$parentPage->id}'>{$this->_('Open the page tree')}</a></p>
+            <p><a href='{$this->config->urls->admin}page/list/?open={$parentPage->id}'>{$this->_('Open the page tree of created options')}</a></p>
             <p><a href='./'>Create another page field</a></p>";
 
         return $out;
