@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.3',
+            'version' => '0.5.4',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -82,71 +82,71 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $form->add($fieldset);
 
         $f = $this->wire('modules')->get("InputfieldText");
-        $f->name = "fieldLabel";
-        $f->label = __("Field label");
+        $f->name = 'fieldLabel';
+        $f->label = __('Field label', __FILE__);
         $f->required = true;
         $f->requiredAttr = true;
-        $f->description = __("The label of the page field to be created. eg. Room Types");
-        $f->notes = __("Use capitals, spaces etc as this is also used for the parent page name and various labels.");
+        $f->description = __('The label of the page field to be created. eg. Room Types', __FILE__);
+        $f->notes = __('Use capitals, spaces etc as this is also used for the parent page name and various labels.', __FILE__);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldText");
-        $f->name = "fieldDescription";
-        $f->label = __("Field description");
-        $f->description = __("The description for the page field to be created.");
+        $f->name = 'fieldDescription';
+        $f->label = __('Field description');
+        $f->description = __('The description for the page field to be created.', __FILE__);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldPageListSelect");
-        $f->name = "grandParent";
-        $f->label = __("Grandparent page");
+        $f->name = 'grandParent';
+        $f->label = __('Grandparent page', __FILE__);
         $f->required = true;
         $f->requiredAttr = true;
-        $f->description = __("Select the grandparent where the parent of the selectable pages will be created. For example you may want to choose a dedicated 'Options' grandparent page.");
+        $f->description = __('Select the grandparent where the parent of the selectable pages will be created. For example you may want to choose a dedicated "Options" grandparent page.', __FILE__);
         if($this->wire('session')->grandParent) $f->attr('value', $this->wire('session')->grandParent);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldTextarea");
-        $f->name = "selectOptions";
-        $f->label = __("Select options");
-        $f->description = __("These will become the child pages that will populate the page field select options. There are two different options.") . "\n\n" .
-            __("Option 1. TITLE FIELD ONLY - enter one option per line, eg:") . "\n\n" .
-            __("Single") . "\n" .
-            __("Double") . "\n" .
-            __("Suite") . "\n\n" .
-            __("Option 2a. MULTIPLE FIELDS - the first line is used for the field names and the first field must be 'Title'. Subsequent lines are the values for the fields, eg:") . "\n\n" .
-            __("Title, Number of Beds, Number of People, Kitchen Facilities") . "\n" .
-            __("Single, 1, 1, Fridge Only") . "\n" .
-            __("Double, 2, 2, Fridge Only") . "\n" .
-            __("Suite, 3, 6, Full Kitchen") . "\n\n" .
-            __("Option 2b. MULTIPLE FIELDS WITH SPECIFIED FIELD TYPES - same as 2a, except that you can specify the field types (Integer, Text, Textarea, TextLanguage, TextareaLanguage, Datetime, Email, Password), eg:") . "\n\n" .
-            __("Title, Number of Beds>Integer, Number of People>Integer, Kitchen Facilities>Text") . "\n" .
-            __("Single, 1, 1, Fridge Only") . "\n" .
-            __("Double, 2, 2, Fridge Only") . "\n" .
-            __("Suite, 3, 6, Full Kitchen");
-        $f->notes = __("NB For Option 2a or 2b, \"Title\" must be the first option on the first line.\n\n" .
-            "You can use CSV values with commas etc so long as you use double quote enclosures, eg: \"Bolivia, Plurinational State of\", BO, \"BOLIVIA, PLURINATIONAL STATE OF\", BOL, 68\n\n" .
-            "For the multiple fields option, you can specify labels for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.") . "\n\n" .
-            "Or you can choose from the following existing text fields:" . "\ntitle, " . implode(", ", $this->wire('fields')->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
+        $f->name = 'selectOptions';
+        $f->label = __('Select options (child pages)', __FILE__);
+        $f->description = __('These will become the child pages that will populate the page field select options. There are two different options.', __FILE__) . "\n\n" .
+            __('Option 1. TITLE FIELD ONLY - enter one option per line, eg:', __FILE__) . "\n\n" .
+            __('Single', __FILE__) . "\n" .
+            __('Double', __FILE__) . "\n" .
+            __('Suite', __FILE__) . "\n\n" .
+            __('Option 2a. MULTIPLE FIELDS - the first line is used for the field names and the first field must be "Title". Subsequent lines are the values for the fields, eg:', __FILE__) . "\n\n" .
+            __('Title, Number of Beds, Number of People, Kitchen Facilities', __FILE__) . "\n" .
+            __('Single, 1, 1, Fridge Only', __FILE__) . "\n" .
+            __('Double, 2, 2, Fridge Only', __FILE__) . "\n" .
+            __('Suite, 3, 6, Full Kitchen', __FILE__) . "\n\n" .
+            __('Option 2b. MULTIPLE FIELDS WITH SPECIFIED FIELD TYPES - same as 2a, except that you can specify the field types (Integer, Text, Textarea, TextLanguage, TextareaLanguage, Datetime, Email, Password), eg:', __FILE__) . "\n\n" .
+            __('Title, Number of Beds>Integer, Number of People>Integer, Kitchen Facilities>Text', __FILE__) . "\n" .
+            __('Single, 1, 1, Fridge Only', __FILE__) . "\n" .
+            __('Double, 2, 2, Fridge Only', __FILE__) . "\n" .
+            __('Suite, 3, 6, Full Kitchen', __FILE__);
+        $f->notes = __('For Option 2a or 2b, "Title" must be the first option on the first line.', __FILE__) . "\n" .
+            __('You can use CSV values with commas etc so long as you use double quote enclosures, eg: "Bolivia, Plurinational State of", BO, "BOLIVIA, PLURINATIONAL STATE OF", BOL, 68', __FILE__) . "\n" .
+            __('For the multiple fields option, you can specify labels for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.', __FILE__) . "\n" .
+            __('Or you can choose from the following existing text fields:', __FILE__) . 'title, ' . implode(", ", $this->wire('fields')->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
         $f->required = true;
         $f->requiredAttr = true;
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldRadios");
-        $f->name = "derefAsPage";
-        $f->label = __("Page field value type");
-        $f->description = __("If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support selection of a single item (page), then select one of the single Page options (if you are not sure which, select the last option).");
+        $f->name = 'derefAsPage';
+        $f->label = __('Page field value type', __FILE__);
+        $f->description = __('If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support selection of a single item (page), then select one of the single Page options (if you are not sure which, select the last option).', __FILE__);
         $f->required = true;
         $f->requiredAttr = true;
-        $f->addOption('0', __('Multiple pages&nbsp;(PageArray)'));
-        $f->addOption('1', __('Single page&nbsp;(Page) or boolean false when none selected'));
-        $f->addOption('2', __('Single page&nbsp;(Page) or empty page&nbsp;(NullPage) when none selected'));
+        $f->addOption('0', __('Multiple pages&nbsp;(PageArray)', __FILE__));
+        $f->addOption('1', __('Single page&nbsp;(Page) or boolean false when none selected', __FILE__));
+        $f->addOption('2', __('Single page&nbsp;(Page) or empty page&nbsp;(NullPage) when none selected', __FILE__));
         $this->wire('session')->derefAsPage ? $f->attr('value', $this->wire('session')->derefAsPage) : $f->attr('value', 0);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldSelect");
-        $f->name = "inputfield";
-        $f->label = __("Input field type");
-        $f->description = __('The type of field that will be used to select a page. Select one that is consistent with the single page vs. multi-page you chose in the "Page field value type" field.');
+        $f->name = 'inputfield';
+        $f->label = __('Input field type', __FILE__);
+        $f->description = __('The type of field that will be used to select a page. Select one that is consistent with the single page vs. multi-page you chose in the "Page field value type" field.', __FILE__);
         $f->required = true;
         $f->requiredAttr = true;
 
@@ -185,30 +185,30 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $form->add($fieldset);
 
         $f = $this->wire('modules')->get("InputfieldText");
-        $f->name = "parentTemplate";
-        $f->label = __("Parent template label / name");
-        $f->description = __("The label for the parent template to be created");
-        $f->notes = __("You can leave as is (generated from the Field Label entered above) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.") . "\n\n" .
-            __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
+        $f->name = 'parentPageTitle';
+        $f->label = __('Parent page title', __FILE__);
+        $f->description = __('The title for the parent page to be created', __FILE__);
+        $f->notes = __('You can leave as is (generated from the Field Label entered above or change if you wish. Use capitals, spaces etc. The page name will be converted from the entered title.', __FILE__);
         $f->required = true;
         $f->requiredAttr = true;
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldText");
-        $f->name = "childTemplate";
-        $f->label = __("Child template label / name");
-        $f->description = __("The label for the child template to be created");
-        $f->notes = __("You can leave as is (generated from the Field Label entered above) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.") . "\n\n" .
-            __("Or you can choose from the following existing templates:") . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
+        $f->name = 'parentTemplate';
+        $f->label = __('Parent template label / name', __FILE__);
+        $f->description = __('The label for the parent template to be created', __FILE__);
+        $f->notes = __('You can leave as is (generated from the Field Label entered above) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.', __FILE__) . "\n\n" .
+            __('Or you can choose from the following existing templates:', __FILE__) . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
         $f->required = true;
         $f->requiredAttr = true;
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldText");
-        $f->name = "parentPageTitle";
-        $f->label = __("Parent page title");
-        $f->description = __("The title for the parent page to be created");
-        $f->notes = __("You can leave as is (generated from the Field Label entered above or change if you wish. Use capitals, spaces etc. The page name will be converted from the entered title.");
+        $f->name = 'childTemplate';
+        $f->label = __('Child template label / name', __FILE__);
+        $f->description = __('The label for the child template to be created', __FILE__);
+        $f->notes = __('You can leave as is (generated from the Field Label entered above) or change if you wish. Use capitals, spaces etc. The template name will be converted from the entered label.', __FILE__) . "\n\n" .
+            __('Or you can choose from the following existing templates:', __FILE__) . "\n" . implode(", ", $this->wire('templates')->find("flags=0")->getArray());
         $f->required = true;
         $f->requiredAttr = true;
         $fieldset->add($f);
@@ -218,46 +218,47 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $form->add($fieldset);
 
         $f = $this->wire('modules')->get('InputfieldCheckbox');
-        $f->name = "noChangeTemplate";
-        $f->label = __("Don't allow pages to change their template?");
-        $f->description = __("When checked, pages using this template will be unable to be changed to another template."); // noChangeTemplate option, description
-        $f->attr('checked', $this->wire('session')->noChangeTemplate == '1' ? 'checked' : '' );
+        $f->name = 'noChangeTemplate';
+        $f->label = __('Don\'t allow pages to change their template?', __FILE__);
+        $f->description = __('When checked, pages using these parent and child templates will be unable to be changed to another template.', __FILE__);
+        $f->attr('checked', $this->wire('session')->noChangeTemplate == '0' ? '' : 'checked');
         if($this->wire('session')->noChangeTemplate) $f->attr('value', $this->wire('session')->noChangeTemplate);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldRadios");
-        $f->name = "noParents";
-        $f->label = __('Can the parent template be used for new pages?');
+        $f->name = 'noParents';
+        $f->label = __('Can the parent template be used for new pages?', __FILE__);
+        $f->notes = __('Note that "No" does not prevent the initial parent page being created.', __FILE__);
         $f->required = true;
         $f->requiredAttr = true;
-        $f->addOption(0, __('Yes'));
-        $f->addOption(1, __('No'));
-        $f->addOption(-1, __('One'));
+        $f->addOption(0, __('Yes', __FILE__));
+        $f->addOption(1, __('No', __FILE__));
+        $f->addOption(-1, __('One', __FILE__));
         $this->wire('session')->noParents ? $f->attr('value', $this->wire('session')->noParents) : $f->attr('value', 1);
         $f->optionColumns = 1;
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldCheckbox");
-        $f->name = "addable";
-        $f->label = __("Allow new pages to be created from field?");
-        $f->description = __("If checked, an option to add new pages will also be present if the editing user has access to create/publish these pages.");
-        $f->notes = __("All other requirements (parent & template selected and label-field set to title) for this feature to work are set automatically.");
+        $f->name = 'addable';
+        $f->label = __('Allow new pages to be created from field?', __FILE__);
+        $f->description = __('If checked, an option to add new pages will also be present if the editing user has access to create/publish these pages.', __FILE__);
+        $f->notes = __('All other requirements (parent & template selected and label-field set to title) for this feature to work are set automatically.', __FILE__);
         $f->attr('checked', $this->wire('session')->addable == '1' ? 'checked' : '' );
         if($this->wire('session')->addable) $f->attr('value', $this->wire('session')->addable);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldCheckbox");
-        $f->name = "preventaddnewshortcut";
-        $f->label = __("Prevent template for select option pages from being added to the Add Page shortcut menu?");
-        $f->description = __("If checked, the template for the select option pages won't be added to the the 'Add New Page' shortcut button/menu that appears on the main Pages screen.");
-        $f->notes = __("This adds 'noShortcut:1' to templates settings.");
+        $f->name = 'preventaddnewshortcut';
+        $f->label = __('Prevent template for select option pages from being added to the Add Page shortcut menu?', __FILE__);
+        $f->description = __('If checked, the template for the select option pages won\'t be added to the "Add New Page" shortcut button/menu that appears on the main Pages screen.', __FILE__);
+        $f->notes = __('This adds `noShortcut:1` to templates settings.', __FILE__);
         $f->attr('checked', $this->wire('session')->preventaddnewshortcut == '1' ? 'checked' : '' );
         if($this->wire('session')->preventaddnewshortcut) $f->attr('value', $this->wire('session')->preventaddnewshortcut);
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldSubmit");
         $f->name = 'submit';
-        $f->value = __("Create field, templates, and pages");
+        $f->value = __('Create field, templates, and pages', __FILE__);
         $form->add($f);
 
         return $form;
@@ -341,6 +342,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             $childTemplate->label = $childTemplateLabel;
             $childTemplate->noShortcut = $form->get('preventaddnewshortcut')->value == 1 ? '1' : '';
             $childTemplate->fieldgroup = $fg;
+            $childTemplate->noChangeTemplate = $form->get('noChangeTemplate')->value;
             $childTemplate->save();
         }
         else {

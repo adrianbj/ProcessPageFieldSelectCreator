@@ -10,7 +10,7 @@ $(window).load(function() {
     // if parent and child template names are the same, force parent to have 's' suffix
     // this could occur if the field name is set to something like "sheep" where plural and singular is the same
     $('#Inputfield_fieldLabel').bind('blur', function() {
-        if($('#Inputfield_parentTemplate').val() === $('#Inputfield_childTemplate').val()) {
+        if($('#Inputfield_parentTemplate').val() !== '' && $('#Inputfield_parentTemplate').val() === $('#Inputfield_childTemplate').val()) {
             $('#Inputfield_parentTemplate').val($('#Inputfield_fieldLabel').val() + 's');
         }
     });
