@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.5',
+            'version' => '0.5.6',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -78,7 +78,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $form->method = 'post';
 
         $fieldset = $this->wire('modules')->get("InputfieldFieldset");
-        $fieldset->label = __('Manually entered settings', __FILE__);
+        $fieldset->label = __('Field settings', __FILE__);
         $form->add($fieldset);
 
         $f = $this->wire('modules')->get("InputfieldText");
@@ -94,39 +94,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->name = 'fieldDescription';
         $f->label = __('Field description');
         $f->description = __('The description for the page field to be created.', __FILE__);
-        $fieldset->add($f);
-
-        $f = $this->wire('modules')->get("InputfieldPageListSelect");
-        $f->name = 'grandParent';
-        $f->label = __('Grandparent page', __FILE__);
-        $f->required = true;
-        $f->requiredAttr = true;
-        $f->description = __('Select the grandparent where the parent of the selectable pages will be created. For example you may want to choose a dedicated "Options" grandparent page.', __FILE__);
-        if($this->wire('session')->grandParent) $f->attr('value', $this->wire('session')->grandParent);
-        $fieldset->add($f);
-
-        $f = $this->wire('modules')->get("InputfieldTextarea");
-        $f->name = 'selectOptions';
-        $f->label = __('Select options (child pages)', __FILE__);
-        $f->description = __('These will become the child pages that will populate the page field select options. There are two different options.', __FILE__) . "\n\n" .
-            __('Option 1. TITLE FIELD ONLY - enter one option per line, eg:', __FILE__) . "\n\n" .
-            __('Single', __FILE__) . "\n" .
-            __('Double', __FILE__) . "\n" .
-            __('Suite', __FILE__) . "\n\n" .
-            __('Option 2a. MULTIPLE FIELDS - the first line is used for the field names and the first field must be "Title". Subsequent lines are the values for the fields, eg:', __FILE__) . "\n\n" .
-            __('Title, Number of Beds, Number of People, Kitchen Facilities', __FILE__) . "\n" .
-            __('Single, 1, 1, Fridge Only', __FILE__) . "\n" .
-            __('Double, 2, 2, Fridge Only', __FILE__) . "\n" .
-            __('Suite, 3, 6, Full Kitchen', __FILE__) . "\n\n" .
-            __('Option 2b. MULTIPLE FIELDS WITH SPECIFIED FIELD TYPES - same as 2a, except that you can specify the field types (Integer, Text, Textarea, TextLanguage, TextareaLanguage, Datetime, Email, Password), eg:', __FILE__) . "\n\n" .
-            __('Title, Number of Beds>Integer, Number of People>Integer, Kitchen Facilities>Text', __FILE__) . "\n" .
-            __('Single, 1, 1, Fridge Only', __FILE__) . "\n" .
-            __('Double, 2, 2, Fridge Only', __FILE__) . "\n" .
-            __('Suite, 3, 6, Full Kitchen', __FILE__);
-        $f->notes = __('For Option 2a or 2b, "Title" must be the first option on the first line.', __FILE__) . "\n" .
-            __('You can use CSV values with commas etc so long as you use double quote enclosures, eg: "Bolivia, Plurinational State of", BO, "BOLIVIA, PLURINATIONAL STATE OF", BOL, 68', __FILE__) . "\n" .
-            __('For the multiple fields option, you can specify labels for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.', __FILE__) . "\n" .
-            __('Or you can choose from the following existing text fields:', __FILE__) . 'title, ' . implode(", ", $this->wire('fields')->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldRadios");
@@ -179,8 +146,17 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $fieldset->add($f);
 
         $fieldset = $this->wire('modules')->get("InputfieldFieldset");
-        $fieldset->label = __('Automatically generated settings', __FILE__);
+        $fieldset->label = __('Pages settings', __FILE__);
         $form->add($fieldset);
+
+        $f = $this->wire('modules')->get("InputfieldPageListSelect");
+        $f->name = 'grandParent';
+        $f->label = __('Grandparent page', __FILE__);
+        $f->required = true;
+        $f->requiredAttr = true;
+        $f->description = __('Select the grandparent where the parent of the selectable pages will be created. For example you may want to choose a dedicated "Options" grandparent page.', __FILE__);
+        if($this->wire('session')->grandParent) $f->attr('value', $this->wire('session')->grandParent);
+        $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldText");
         $f->name = 'parentPageTitle';
@@ -190,6 +166,34 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->required = true;
         $f->requiredAttr = true;
         $fieldset->add($f);
+
+        $f = $this->wire('modules')->get("InputfieldTextarea");
+        $f->name = 'childPages';
+        $f->label = __('Child pages (select options)', __FILE__);
+        $f->description = __('These will become the child pages that will populate the page field select options. There are two different options.', __FILE__) . "\n\n" .
+            __('Option 1. TITLE FIELD ONLY - enter one option per line, eg:', __FILE__) . "\n\n" .
+            __('Single', __FILE__) . "\n" .
+            __('Double', __FILE__) . "\n" .
+            __('Suite', __FILE__) . "\n\n" .
+            __('Option 2a. MULTIPLE FIELDS - the first line is used for the field names and the first field must be "Title". Subsequent lines are the values for the fields, eg:', __FILE__) . "\n\n" .
+            __('Title, Number of Beds, Number of People, Kitchen Facilities', __FILE__) . "\n" .
+            __('Single, 1, 1, Fridge Only', __FILE__) . "\n" .
+            __('Double, 2, 2, Fridge Only', __FILE__) . "\n" .
+            __('Suite, 3, 6, Full Kitchen', __FILE__) . "\n\n" .
+            __('Option 2b. MULTIPLE FIELDS WITH SPECIFIED FIELD TYPES - same as 2a, except that you can specify the field types (Integer, Text, Textarea, TextLanguage, TextareaLanguage, Datetime, Email, Password), eg:', __FILE__) . "\n\n" .
+            __('Title, Number of Beds>Integer, Number of People>Integer, Kitchen Facilities>Text', __FILE__) . "\n" .
+            __('Single, 1, 1, Fridge Only', __FILE__) . "\n" .
+            __('Double, 2, 2, Fridge Only', __FILE__) . "\n" .
+            __('Suite, 3, 6, Full Kitchen', __FILE__);
+        $f->notes = __('For Option 2a or 2b, "Title" must be the first option on the first line.', __FILE__) . "\n" .
+            __('You can use CSV values with commas etc so long as you use double quote enclosures, eg: "Bolivia, Plurinational State of", BO, "BOLIVIA, PLURINATIONAL STATE OF", BOL, 68', __FILE__) . "\n" .
+            __('For the multiple fields option, you can specify labels for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.', __FILE__) . "\n" .
+            __('Or you can choose from the following existing text fields:', __FILE__) . 'title, ' . implode(", ", $this->wire('fields')->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
+        $fieldset->add($f);
+
+        $fieldset = $this->wire('modules')->get("InputfieldFieldset");
+        $fieldset->label = __('Template settings', __FILE__);
+        $form->add($fieldset);
 
         $f = $this->wire('modules')->get("InputfieldText");
         $f->name = 'parentTemplate';
@@ -210,10 +214,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->required = true;
         $f->requiredAttr = true;
         $fieldset->add($f);
-
-        $fieldset = $this->wire('modules')->get("InputfieldFieldset");
-        $fieldset->label = __('Optional settings', __FILE__);
-        $form->add($fieldset);
 
         $f = $this->wire('modules')->get('InputfieldCheckbox');
         $f->name = 'noChangeTemplate';
@@ -379,12 +379,12 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         // Child pages - ie select options
         $i=0;
 
-        if($form->get('selectOptions')->value != '') {
-            $selectOptions = trim(preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $form->get('selectOptions')->value),"\n"); // remove any blank lines from the textarea
+        if($form->get('childPages')->value != '') {
+            $childPages = trim(preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $form->get('childPages')->value),"\n"); // remove any blank lines from the textarea
 
-            if(strpos($selectOptions,',') !== false) $selectOptions = stristr($selectOptions, "Title"); // if Option 2, then need to remove anything from before "Title"
+            if(strpos($childPages,',') !== false) $childPages = stristr($childPages, "Title"); // if Option 2, then need to remove anything from before "Title"
 
-            foreach(explode("\n",$selectOptions) as $selectTitle) {
+            foreach(explode("\n",$childPages) as $selectTitle) {
 
                 if(strpos($selectTitle,',') !== false) { // creation of child pages using Option 2 configuration options - comma should be a good enough indicator to check for
 
