@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.4',
+            'version' => '0.5.5',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -127,8 +127,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             __('You can use CSV values with commas etc so long as you use double quote enclosures, eg: "Bolivia, Plurinational State of", BO, "BOLIVIA, PLURINATIONAL STATE OF", BOL, 68', __FILE__) . "\n" .
             __('For the multiple fields option, you can specify labels for new fields and they will be created automatically. Use capitals, spaces etc for new field names as these will be used for the field label and converted for the name.', __FILE__) . "\n" .
             __('Or you can choose from the following existing text fields:', __FILE__) . 'title, ' . implode(", ", $this->wire('fields')->find("type=FieldtypeText|FieldtypeInteger|FieldtypeTextarea|FieldtypeTextLanguage|FieldtypeTextareaLanguage|FieldtypeDatetime|FieldtypeEmail|FieldtypePassword")->getArray());
-        $f->required = true;
-        $f->requiredAttr = true;
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldRadios");
