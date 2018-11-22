@@ -6,6 +6,16 @@ $(window).load(function() {
         $('#Inputfield_parentTemplate').val(plural);
         $('#Inputfield_childTemplate').val(singular);
         $('#Inputfield_parentPageTitle').val(plural);
+
+        if(pluralize.isPlural(field_label)) {
+            $('#Inputfield_derefAsPage_0').prop("checked", true);
+            $('#Inputfield_inputfield').val('InputfieldAsmSelect');
+        }
+        else {
+            $('#Inputfield_derefAsPage_2').prop("checked", true);
+            $('#Inputfield_inputfield').val('InputfieldSelect');
+        }
+
     });
     // if parent and child template names are the same, force parent to have 's' suffix
     // this could occur if the field name is set to something like "sheep" where plural and singular is the same
