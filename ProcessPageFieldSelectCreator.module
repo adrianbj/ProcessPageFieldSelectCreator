@@ -102,9 +102,9 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->description = __('If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support selection of a single item (page), then select one of the single Page options (if you are not sure which, select the last option).', __FILE__);
         $f->required = true;
         $f->requiredAttr = true;
-        $f->addOption('0', __('Multiple pages&nbsp;(PageArray)', __FILE__));
-        $f->addOption('1', __('Single page&nbsp;(Page) or boolean false when none selected', __FILE__));
-        $f->addOption('2', __('Single page&nbsp;(Page) or empty page&nbsp;(NullPage) when none selected', __FILE__));
+        $f->addOption('0', sprintf(__('Multiple pages%s(PageArray)', __FILE__), '&nbsp;'));
+        $f->addOption('1', sprintf(__('Single page%s(Page) or boolean false when none selected', __FILE__), '&nbsp;'));
+        $f->addOption('2', sprintf(__('Single page%s(Page) or empty page%s(NullPage) when none selected', __FILE__), '&nbsp;', '&nbsp;'));
         $this->wire('session')->derefAsPage ? $f->attr('value', $this->wire('session')->derefAsPage) : $f->attr('value', 0);
         $fieldset->add($f);
 
