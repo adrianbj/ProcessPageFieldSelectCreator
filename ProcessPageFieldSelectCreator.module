@@ -169,7 +169,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
 
         $f = $this->wire('modules')->get("InputfieldTextarea");
         $f->name = 'childPages';
-        $f->label = __('Child pages&nbsp;(select options)', __FILE__);
+        $f->label = sprintf(__('Child pages%s(select options)', __FILE__), '&nbsp;');
         $f->description = __('These will become the child pages that will populate the page field select options. There are two different options.', __FILE__) . "\n\n" .
             __('Option 1. TITLE FIELD ONLY - enter one option per line, eg:', __FILE__) . "\n\n" .
             __('Single', __FILE__) . "\n" .
