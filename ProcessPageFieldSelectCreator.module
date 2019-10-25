@@ -26,7 +26,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.8',
+            'version' => '0.5.9',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -90,16 +90,28 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->notes = __('Use capitals, spaces etc as this is also used for the parent page name and various labels.', __FILE__);
         $fieldset->add($f);
 
+        $f = $this->wire('modules')->get('InputfieldCheckbox');
+        $f->name = 'noFieldCreation';
+        $f->label = __('Don\'t actually create the page field?', __FILE__);
+        $f->description = __('This prevents the actual page field from being created. However, the parent and child pages and templates will still be created. This is a little counter to the original purpose for this module but can still be useful in some scenarios as a quick way of setting up a page tree and the various connected templates and settings. The Field Label (above) is still used to automatically populate the page parent and template labels / names, so it is still required.', __FILE__);
+        $f->notes = __('Unless you know what you are doing, don\'t use this :)', __FILE__);
+        $f->collapsed = Inputfield::collapsedBlank;
+        $f->attr('checked', $this->wire('session')->noFieldCreation == '1' ? 'checked' : '');
+        if($this->wire('session')->noFieldCreation) $f->attr('value', $this->wire('session')->noFieldCreation);
+        $fieldset->add($f);
+
         $f = $this->wire('modules')->get("InputfieldText");
         $f->name = 'fieldDescription';
         $f->label = __('Field description');
         $f->description = __('The description for the page field to be created.', __FILE__);
+        $f->showIf="noFieldCreation!='1'";
         $fieldset->add($f);
 
         $f = $this->wire('modules')->get("InputfieldRadios");
         $f->name = 'derefAsPage';
         $f->label = __('Page field value type', __FILE__);
         $f->description = __('If you want your field to support selection of multiple items (pages), then you should select the first option (PageArray). If your field only needs to support selection of a single item (page), then select one of the single Page options (if you are not sure which, select the last option).', __FILE__);
+        $f->showIf="noFieldCreation!='1'";
         $f->required = true;
         $f->requiredAttr = true;
         $f->addOption('0', sprintf(__('Multiple pages%s(PageArray)', __FILE__), '&nbsp;'));
@@ -112,6 +124,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->name = 'inputfield';
         $f->label = __('Input field type', __FILE__);
         $f->description = __('The type of field that will be used to select a page. Select one that is consistent with the single page vs. multi-page you chose in the "Page field value type" field.', __FILE__);
+        $f->showIf="noFieldCreation!='1'";
         $f->required = true;
         $f->requiredAttr = true;
 
@@ -281,6 +294,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $parentTemplateLabel = $form->get('parentTemplate')->value;
         $parentTemplateName = $this->wire('sanitizer')->name(strtolower($parentTemplateLabel));
 
+        $this->wire('session')->noFieldCreation = (int) $this->wire('input')->noFieldCreation;
         $this->wire('session')->grandParent = (int) $this->wire('input')->grandParent;
         $this->wire('session')->noChangeTemplate = (int) $this->wire('input')->noChangeTemplate;
         $this->wire('session')->noParents = (int) $this->wire('input')->noParents;
@@ -472,7 +486,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
 
 
         //Page Field
-        if(!$this->wire('fields')->$fieldName && $fieldName != '') {
+        if($form->get('noFieldCreation')->value !== 1 && !$this->wire('fields')->$fieldName && $fieldName != '') {
             $field = new Field();
             $field->type = $this->wire('modules')->get('FieldtypePage');
             $field->name = $fieldName;
@@ -485,9 +499,12 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             $field->labelFieldName = 'title';
             $field->addable = $form->get('addable')->value;
             $field->save();
+            return $this->processFormMarkup($field, $parentTemplate, $childTemplate, $parentPage);
+        }
+        else {
+            return $this->processFormMarkup(null, $parentTemplate, $childTemplate, $parentPage);
         }
 
-        return $this->processFormMarkup($field, $parentTemplate, $childTemplate, $parentPage);
 
     }
 
@@ -499,8 +516,16 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     protected function processFormMarkup($field, $parentTemplate, $childTemplate, $parentPage) {
 
         $out = '';
-        $out .= "<h2>Created all required templates and pages for the $field->label field</h2>" .
-            "<p><a href='{$this->config->urls->admin}setup/field/edit?id={$field->id}'>{$this->_('View the created page reference field')}</a></p>
+        $out .= "<h2>Created all required templates and pages";
+        if($field) {
+            $out .= "
+             for the $field->label field</h2>
+             <p><a href='{$this->config->urls->admin}setup/field/edit?id={$field->id}'>{$this->_('View the created page reference field')}</a></p>";
+        }
+        else {
+            $out .= '</h2>';
+        }
+        $out .= "
             <p><a href='{$this->config->urls->admin}setup/template/edit?id={$parentTemplate->id}'>{$this->_('View the parent template')}</a></p>
             <p><a href='{$this->config->urls->admin}setup/template/edit?id={$childTemplate->id}'>{$this->_('View the child template')}</a></p>
             <p><a href='{$this->config->urls->admin}page/list/?open={$parentPage->id}'>{$this->_('Open the page tree of created options')}</a></p>
