@@ -6,27 +6,17 @@
  *
  * Allows automated creation of Page fields, along with the templates and page tree for their source.
  *
- * ProcessWire 3.x
- * Copyright (C) 2011 by Ryan Cramer
+ * Copyright (C) 2020 by Adrian Jones
  * Licensed under GNU/GPL v2, see LICENSE.TXT
- *
- * http://www.processwire.com
- * http://www.ryancramer.com
  *
  */
 
 class ProcessPageFieldSelectCreator extends Process implements Module {
 
-    /**
-     * getModuleInfo is a module required by all modules to tell ProcessWire about them
-     *
-     * @return array
-     *
-     */
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.9',
+            'version' => '0.5.10',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -41,10 +31,6 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     }
 
 
-    /**
-     * Initialize the module
-     *
-     */
     public function init() {
         parent::init();
         $this->wire('config')->scripts->add($this->wire('config')->urls->{$this->className} . 'pluralize.js');
@@ -303,7 +289,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $this->wire('session')->addable = (int) $this->wire('input')->addable;
         $this->wire('session')->preventaddnewshortcut = (int) $this->wire('input')->preventaddnewshortcut;
 
-        if($this->wire('fields')->$fieldName) {
+        if($form->get('noFieldCreation')->value !== 1 && $this->wire('fields')->$fieldName) {
             return "<h2>{$this->_('Field already exists')}</h2><p>{$this->_('The page field you are trying to create already exists.')}</p><p>{$this->_('You can either')} <a href='./'>{$this->_('try again')}</a> {$this->_('with a different Field Label, or')} <a href='{$this->config->urls->admin}setup/field/edit?id={$this->wire('fields')->$fieldName->id}'>{$this->_('edit/delete the existing field')}</a>.</p>";
         }
 
