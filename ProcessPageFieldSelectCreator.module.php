@@ -16,7 +16,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.10',
+            'version' => '0.5.11',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -214,6 +214,16 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $f->requiredAttr = true;
         $fieldset->add($f);
 
+        $f = $this->wire('modules')->get("InputfieldRadios");
+        $f->name = 'templateSpaceCharacter';
+        $f->label = __('Template space character', __FILE__);
+        $f->required = true;
+        $f->description = __('The space replacement character used when creating the template name. eg. the underscore in "room_types" when the template label is "Room Types"', __FILE__);
+        $f->addOption('_');
+        $f->addOption('-');
+        $f->defaultValue('_');
+        $fieldset->add($f);
+
         $f = $this->wire('modules')->get('InputfieldCheckbox');
         $f->name = 'noChangeTemplate';
         $f->label = __('Don\'t allow pages to change their template?', __FILE__);
@@ -278,7 +288,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $fieldName = $this->wire('sanitizer')->fieldName(strtolower($fieldLabel));
 
         $parentTemplateLabel = $form->get('parentTemplate')->value;
-        $parentTemplateName = $this->wire('sanitizer')->name(strtolower($parentTemplateLabel));
+        $parentTemplateName = $this->wire('sanitizer')->name(strtolower($parentTemplateLabel), true, 191, $form->get('templateSpaceCharacter')->value);
 
         $this->wire('session')->noFieldCreation = (int) $this->wire('input')->noFieldCreation;
         $this->wire('session')->grandParent = (int) $this->wire('input')->grandParent;
@@ -322,7 +332,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
 
         // Child template
         $childTemplateLabel = $form->get('childTemplate')->value;
-        $childTemplateName = $this->wire('sanitizer')->fieldName(strtolower($childTemplateLabel));
+        $childTemplateName = $this->wire('sanitizer')->name(strtolower($childTemplateLabel), true, 191, $form->get('templateSpaceCharacter')->value);
 
         if(!$this->wire('fieldgroups')->$childTemplateName) {
             $fg = new Fieldgroup();
@@ -471,7 +481,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         }
 
 
-        //Page Field
+        // Page Field
         if($form->get('noFieldCreation')->value !== 1 && !$this->wire('fields')->$fieldName && $fieldName != '') {
             $field = new Field();
             $field->type = $this->wire('modules')->get('FieldtypePage');
