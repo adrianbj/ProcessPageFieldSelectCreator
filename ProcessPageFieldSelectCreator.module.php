@@ -407,7 +407,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
                         $selectTitle = ltrim($selectTitle,", \t\0\x0B"); // not first row so only want to remove leading commas etc, because trailing ones could be blank field values
                     }
 
-                    foreach(str_getcsv($selectTitle) as $selectFieldTitle) {
+                    foreach(str_getcsv($selectTitle, ',', '"', '\\') as $selectFieldTitle) {
 
                         if(strpos($selectFieldTitle,'>') !== false) {
                             $selectFieldTitleName = strstr($selectFieldTitle, '>', true);
