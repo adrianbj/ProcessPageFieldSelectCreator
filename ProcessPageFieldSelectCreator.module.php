@@ -6,7 +6,7 @@
  *
  * Allows automated creation of Page fields, along with the templates and page tree for their source.
  *
- * Copyright (C) 2020 by Adrian Jones
+ * Copyright (C) 2026 by Adrian Jones
  * Licensed under GNU/GPL v2, see LICENSE.TXT
  *
  */
@@ -16,7 +16,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
     public static function getModuleInfo() {
         return array(
             'title' => __('Page Field Select Creator'),
-            'version' => '0.5.11',
+            'version' => '0.5.12',
             'summary' => __('Automated creation of Page fields, along with the templates and page tree for their source.'),
             'author' => 'Adrian Jones',
             'singular' => true,
@@ -300,7 +300,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         $this->wire('session')->preventaddnewshortcut = (int) $this->wire('input')->preventaddnewshortcut;
 
         if($form->get('noFieldCreation')->value !== 1 && $this->wire('fields')->$fieldName) {
-            return "<h2>{$this->_('Field already exists')}</h2><p>{$this->_('The page field you are trying to create already exists.')}</p><p>{$this->_('You can either')} <a href='./'>{$this->_('try again')}</a> {$this->_('with a different Field Label, or')} <a href='{$this->config->urls->admin}setup/field/edit?id={$this->wire('fields')->$fieldName->id}'>{$this->_('edit/delete the existing field')}</a>.</p>";
+            return "<h2>{$this->_('Field already exists')}</h2><p>{$this->_('The page field you are trying to create already exists.')}</p><p>{$this->_('You can either')} <a href='./'>{$this->_('try again')}</a> {$this->_('with a different Field Label, or')} <a href='".$this->wire('config')->urls->admin."setup/field/edit?id=".$this->wire('fields')->$fieldName->id."'>".$this->_('edit/delete the existing field')."</a>.</p>";
         }
 
 
@@ -382,7 +382,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
             $parentPage->template = $parentTemplate;
             $parentPage->name = $parentPageName;
             $parentPage->title = $parentPageTitle;
-            $parentPage->of;
+            $parentPage->of(false);
             $parentPage->save();
         }
 
@@ -451,7 +451,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
                                 $child_page->template = $childTemplate;
                                 $child_page->name = $this->wire('sanitizer')->pageName($selectFieldTitleName, true);
                                 $child_page->title = $selectFieldTitle;
-                                $child_page->of;
+                                $child_page->of(false);
                                 $child_page->save();
                             }
                             else { // add values for the other fields to the child page
@@ -472,7 +472,7 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
                     $child_page->template = $childTemplate;
                     $child_page->name = $this->wire('sanitizer')->pageName($selectTitle, true);
                     $child_page->title = $selectTitle;
-                    $child_page->of;
+                    $child_page->of(false);
                     $child_page->save();
                 }
 
@@ -516,15 +516,15 @@ class ProcessPageFieldSelectCreator extends Process implements Module {
         if($field) {
             $out .= "
              for the $field->label field</h2>
-             <p><a href='{$this->config->urls->admin}setup/field/edit?id={$field->id}'>{$this->_('View the created page reference field')}</a></p>";
+             <p><a href='".$this->wire('config')->urls->admin."setup/field/edit?id=$field->id'>".$this->_('View the created page reference field')."</a></p>";
         }
         else {
             $out .= '</h2>';
         }
         $out .= "
-            <p><a href='{$this->config->urls->admin}setup/template/edit?id={$parentTemplate->id}'>{$this->_('View the parent template')}</a></p>
-            <p><a href='{$this->config->urls->admin}setup/template/edit?id={$childTemplate->id}'>{$this->_('View the child template')}</a></p>
-            <p><a href='{$this->config->urls->admin}page/list/?open={$parentPage->id}'>{$this->_('Open the page tree of created options')}</a></p>
+            <p><a href='".$this->wire('config')->urls->admin."setup/template/edit?id=$parentTemplate->id'>".$this->_('View the parent template')."</a></p>
+            <p><a href='".$this->wire('config')->urls->admin."setup/template/edit?id=$childTemplate->id'>".$this->_('View the child template')."</a></p>
+            <p><a href='".$this->wire('config')->urls->admin."page/list/?open=$parentPage->id'>".$this->_('Open the page tree of created options')."</a></p>
             <p><a href='./'>Create another page field</a></p>";
 
         return $out;
